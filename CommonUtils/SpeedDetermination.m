@@ -55,7 +55,7 @@ classdef SpeedDetermination
             end
         end
 
-        function speed = calculateSpeed(rawData, sensorMap)
+        function speed = calculateSpeed(rawData, inputLinkID)
             % Calculate the speed of the mechanism based on input link zero crossings
             % Args:
             % - rawData: Table containing raw experimental data
@@ -71,7 +71,7 @@ classdef SpeedDetermination
             Angle_Z_COL = find(contains(columnHeaders, 'Angle Z')); % Column index for Angle Z
 
             % Automatically determine input link ID using sensorMap
-            inputLinkID = sensorMap('E'); % Adjust logic if other criteria define the input link
+%             inputLinkID = sensorMap('E'); % Adjust logic if other criteria define the input link
 
             % Filter data for the input link to find zero crossings
             inputLinkData = rawData(contains(rawData{:, SENSOR_ID_COL}, inputLinkID), :);
@@ -86,20 +86,27 @@ classdef SpeedDetermination
             angleData = table2array(inputLinkData(:, Angle_Z_COL));
 
             % Interpolate to find precise times for zero degrees
-            interpStartTime = interp1(angleData(zeroCrossings(1)-1:zeroCrossings(1)+1), ...
-                                      timeData(zeroCrossings(1)-1:zeroCrossings(1)+1), ...
-                                      0, 'linear', 'extrap');
-
-            interpEndTime = interp1(angleData(zeroCrossings(3)-1:zeroCrossings(3)+1), ...
-                                    timeData(zeroCrossings(3)-1:zeroCrossings(3)+1), ...
-                                    0, 'linear', 'extrap');
-
+%             interpStartTime = interp1(angleData(zeroCrossings(1)-1:zeroCrossings(1)+1), ...
+%                                       timeData(zeroCrossings(1)-1:zeroCrossings(1)+1), ...
+%                                       0, 'linear', 'extrap');
+% 
+%             interpEndTime = interp1(angleData(zeroCrossings(3)-1:zeroCrossings(3)+1), ...
+%                                     timeData(zeroCrossings(3)-1:zeroCrossings(3)+1), ...
+%                                     0, 'linear', 'extrap');
+%             startTime = 
             % Calculate total time for 2 revolutions
-            totalTime = seconds(interpEndTime - interpStartTime); % Time in seconds
+%             totalTime = seconds(interpEndTime - interpStartTime); % Time in seconds
+%             startTime = timeData(1); % First time point
+%             endTime = timeData(end); % Last time point
+            startTime = timeData(zeroCrossings(1)); % Time at the 2nd zero crossing
+            endTime = timeData(zeroCrossings(3) - 1); % Time at the 3rd zero crossing
+
+            totalTime = seconds(endTime - startTime); % Time in seconds
+
 
             % Convert to RPM (Revolutions Per Minute)
-            speed = round((2 / totalTime) * 60, 2);
-
+%             speed = round((2 / totalTime) * 60, 2);
+            speed = round((60 / totalTime), 2);
             % Strip trailing zeros
 %             speed = num2str(speed); % Convert to string
         end
