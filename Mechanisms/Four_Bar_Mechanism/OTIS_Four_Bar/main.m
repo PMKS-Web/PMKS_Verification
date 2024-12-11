@@ -199,7 +199,7 @@ sensorSourceMap = containers.Map({'E', 'F', 'G'}, ...
 
 sensorInputMap = containers.Map(...
     {'E', 'F', 'G', 'H'}, ... % Keys
-    ['E', 'E', 'E', 'E'] ... % Values
+    {'E', 'E', 'E', 'E'} ... % Values
     );
 
 Mechanism = RMSE(Mechanism, fileToSpeedMap, sensorDataTypes, sensorSourceMap, sensorInputMap, sensorDataFlipMap, pullColumnDataMap);

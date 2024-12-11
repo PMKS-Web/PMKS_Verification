@@ -99,7 +99,7 @@ classdef SpeedDetermination
 %             startTime = timeData(1); % First time point
 %             endTime = timeData(end); % Last time point
             startTime = timeData(zeroCrossings(1)); % Time at the 2nd zero crossing
-            endTime = timeData(zeroCrossings(3) - 1); % Time at the 3rd zero crossing
+            endTime = timeData(zeroCrossings(2) - 1); % Time at the 3rd zero crossing
 
             totalTime = seconds(endTime - startTime); % Time in seconds
 

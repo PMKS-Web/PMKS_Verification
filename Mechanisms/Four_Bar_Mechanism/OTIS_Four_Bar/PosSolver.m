@@ -54,13 +54,28 @@ B = [A(1) + Mechanism.LinkLength.AB * cos(theta), A(2) + Mechanism.LinkLength.AB
 % Circle-circle intersections for C, E, F, G
 C = PosSolverUtils.circleCircleIntersection(B(1), B(2), Mechanism.LinkLength.BC, D(1), D(2), Mechanism.LinkLength.CD, Mechanism.Joint.C(iteration - 1, 1), Mechanism.Joint.C(iteration - 1, 2));
 if isempty(C), valid = false; return; end
-E = PosSolverUtils.circleCircleIntersection(A(1), A(2), Mechanism.LinkLength.AE, B(1), B(2), Mechanism.LinkLength.BE, Mechanism.TracerPoint.E(iteration - 1, 1), Mechanism.TracerPoint.E(iteration - 1, 2));
+% E = PosSolverUtils.circleCircleIntersection(A(1), A(2), Mechanism.LinkLength.AE, B(1), B(2), Mechanism.LinkLength.BE, Mechanism.TracerPoint.E(iteration - 1, 1), Mechanism.TracerPoint.E(iteration - 1, 2));
+% if isempty(E), valid = false; return; end
+% F = PosSolverUtils.circleCircleIntersection(B(1), B(2), Mechanism.LinkLength.BF, C(1), C(2), Mechanism.LinkLength.CF, Mechanism.TracerPoint.F(iteration - 1, 1), Mechanism.TracerPoint.F(iteration - 1, 2));
+% if isempty(F), valid = false; return; end
+% G = PosSolverUtils.circleCircleIntersection(B(1), B(2), Mechanism.LinkLength.BG, C(1), C(2), Mechanism.LinkLength.CG, Mechanism.TracerPoint.G(iteration - 1, 1), Mechanism.TracerPoint.G(iteration - 1, 2));
+% if isempty(G), valid = false; return; end
+% H = PosSolverUtils.circleCircleIntersection(C(1), C(2), Mechanism.LinkLength.CH, D(1), D(2), Mechanism.LinkLength.DH, Mechanism.TracerPoint.H(iteration - 1, 1), Mechanism.TracerPoint.H(iteration - 1, 2));
+% if isempty(H), valid = false; return; end
+E_index = PosSolverUtils.determineIntersectionIndex(Mechanism.Joint.A(1, 1), Mechanism.Joint.A(1, 2), Mechanism.LinkLength.AE, Mechanism.Joint.B(1, 1), Mechanism.Joint.B(1, 2), Mechanism.LinkLength.BE, Mechanism.TracerPoint.E(iteration - 1, 1), Mechanism.TracerPoint.E(iteration - 1, 2));
+E = PosSolverUtils.determineTracerPoint(A(1, 1), A(2), Mechanism.LinkLength.AE, B(1), B(2), Mechanism.LinkLength.BE, Mechanism.TracerPoint.E(iteration - 1, 1), Mechanism.TracerPoint.E(iteration - 1, 2), E_index);
 if isempty(E), valid = false; return; end
-F = PosSolverUtils.circleCircleIntersection(B(1), B(2), Mechanism.LinkLength.BF, C(1), C(2), Mechanism.LinkLength.CF, Mechanism.TracerPoint.F(iteration - 1, 1), Mechanism.TracerPoint.F(iteration - 1, 2));
+
+F_index = PosSolverUtils.determineIntersectionIndex(Mechanism.Joint.B(1, 1), Mechanism.Joint.B(1, 2), Mechanism.LinkLength.BF, Mechanism.Joint.C(1, 1), Mechanism.Joint.C(1, 2), Mechanism.LinkLength.CF, Mechanism.TracerPoint.F(iteration - 1, 1), Mechanism.TracerPoint.F(iteration - 1, 2));
+F = PosSolverUtils.determineTracerPoint(B(1), B(2), Mechanism.LinkLength.BF, C(1), C(2), Mechanism.LinkLength.CF, Mechanism.TracerPoint.F(iteration - 1, 1), Mechanism.TracerPoint.F(iteration - 1, 2), F_index);
 if isempty(F), valid = false; return; end
-G = PosSolverUtils.circleCircleIntersection(B(1), B(2), Mechanism.LinkLength.BG, C(1), C(2), Mechanism.LinkLength.CG, Mechanism.TracerPoint.G(iteration - 1, 1), Mechanism.TracerPoint.G(iteration - 1, 2));
+
+G_index = PosSolverUtils.determineIntersectionIndex(Mechanism.Joint.B(1, 1), Mechanism.Joint.B(1, 2), Mechanism.LinkLength.BG, Mechanism.Joint.C(1, 1), Mechanism.Joint.C(1, 2), Mechanism.LinkLength.CG, Mechanism.TracerPoint.G(iteration - 1, 1), Mechanism.TracerPoint.G(iteration - 1, 2));
+G = PosSolverUtils.determineTracerPoint(B(1), B(2), Mechanism.LinkLength.BG, C(1), C(2), Mechanism.LinkLength.CG, Mechanism.TracerPoint.G(iteration - 1, 1), Mechanism.TracerPoint.G(iteration - 1, 2), G_index);
 if isempty(G), valid = false; return; end
-H = PosSolverUtils.circleCircleIntersection(C(1), C(2), Mechanism.LinkLength.CH, D(1), D(2), Mechanism.LinkLength.DH, Mechanism.TracerPoint.H(iteration - 1, 1), Mechanism.TracerPoint.H(iteration - 1, 2));
+
+H_index = PosSolverUtils.determineIntersectionIndex(Mechanism.Joint.C(1, 1), Mechanism.Joint.C(1, 2), Mechanism.LinkLength.CH, Mechanism.Joint.D(1, 1), Mechanism.Joint.D(1, 2), Mechanism.LinkLength.DH, Mechanism.TracerPoint.H(iteration - 1, 1), Mechanism.TracerPoint.H(iteration - 1, 2));
+H = PosSolverUtils.determineTracerPoint(C(1), C(2), Mechanism.LinkLength.CH, D(1), D(2), Mechanism.LinkLength.DH, Mechanism.TracerPoint.H(iteration - 1, 1), Mechanism.TracerPoint.H(iteration - 1, 2), H_index);
 if isempty(H), valid = false; return; end
 
 % Update positions

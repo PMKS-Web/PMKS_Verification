@@ -807,5 +807,156 @@ classdef PosSolverUtils
             % xIntersect and yIntersect will be empty if any imaginary part was significant
 
         end
+
+%         function [x_calc, y_calc, determined_index] = determineTracerJoint(x1, y1, r1, x2, y2, r2, pointX, pointY, index)
+%             % Determine the next joint position using circle-circle intersection
+%             % Inputs:
+%             % x1, y1, r1: Position and radius of the first joint
+%             % x2, y2, r2: Position and radius of the second joint
+%             % pointX, pointY: Previous point position
+%             % index: Index of the intersection point to use (1 or 2). If unknown, pass []
+%         
+%             % Calculate the distance between the two centers
+%             d = sqrt((x2 - x1)^2 + (y2 - y1)^2);
+%         
+%             % Check if the circles intersect
+%             if d > r1 + r2 || d < abs(r1 - r2) || d == 0
+%                 error('Circles do not intersect or are degenerate.');
+%             end
+%         
+%             % Calculate the midpoint between the circle centers
+%             a = (r1^2 - r2^2 + d^2) / (2 * d);
+%             h = sqrt(r1^2 - a^2);
+%         
+%             % Determine the intersection points
+%             px = x1 + a * (x2 - x1) / d;
+%             py = y1 + a * (y2 - y1) / d;
+%         
+%             % Offset for intersection points
+%             offset_x = h * (y2 - y1) / d;
+%             offset_y = h * (x2 - x1) / d;
+%         
+%             % Two possible intersection points
+%             intersection1 = [px + offset_x, py - offset_y];
+%             intersection2 = [px - offset_x, py + offset_y];
+%         
+%             % Determine index if not provided
+%             if isempty(index)
+%                 dist1 = sqrt((intersection1(1) - pointX)^2 + (intersection1(2) - pointY)^2);
+%                 dist2 = sqrt((intersection2(1) - pointX)^2 + (intersection2(2) - pointY)^2);
+%         
+%                 if dist1 < dist2
+%                     determined_index = 1;
+%                     selected_point = intersection1;
+%                 else
+%                     determined_index = 2;
+%                     selected_point = intersection2;
+%                 end
+%             else
+%                 determined_index = index;
+%                 % Select the desired intersection point based on the index
+%                 if index == 1
+%                     selected_point = intersection1;
+%                 elseif index == 2
+%                     selected_point = intersection2;
+%                 else
+%                     error('Index must be 1 or 2.');
+%                 end
+%             end
+%         
+%             % Assign the calculated position
+%             x_calc = selected_point(1);
+%             y_calc = selected_point(2);
+%         end
+        function [determined_index] = determineIntersectionIndex(x1, y1, r1, x2, y2, r2, pointX, pointY)
+            % Determine the index of the closest intersection point
+            % Inputs:
+            % x1, y1, r1: Position and radius of the first joint
+            % x2, y2, r2: Position and radius of the second joint
+            % pointX, pointY: Previous point position
+        
+            % Calculate the distance between the two centers
+            d = sqrt((x2 - x1)^2 + (y2 - y1)^2);
+        
+            % Check if the circles intersect
+            if d > r1 + r2 || d < abs(r1 - r2) || d == 0
+                error('Circles do not intersect or are degenerate.');
+            end
+        
+            % Calculate the midpoint between the circle centers
+            a = (r1^2 - r2^2 + d^2) / (2 * d);
+            h = sqrt(r1^2 - a^2);
+        
+            % Determine the intersection points
+            px = x1 + a * (x2 - x1) / d;
+            py = y1 + a * (y2 - y1) / d;
+        
+            % Offset for intersection points
+            offset_x = h * (y2 - y1) / d;
+            offset_y = h * (x2 - x1) / d;
+        
+            % Two possible intersection points
+            intersection1 = [px + offset_x, py - offset_y];
+            intersection2 = [px - offset_x, py + offset_y];
+        
+            % Determine the index of the closest intersection point
+            dist1 = sqrt((intersection1(1) - pointX)^2 + (intersection1(2) - pointY)^2);
+            dist2 = sqrt((intersection2(1) - pointX)^2 + (intersection2(2) - pointY)^2);
+        
+            if dist1 < dist2
+                determined_index = 1;
+            else
+                determined_index = 2;
+            end
+        end
+        
+        function curPoint = determineTracerPoint(x1, y1, r1, x2, y2, r2, pointX, pointY, index)
+            % Determine the next joint position using circle-circle intersection
+            % Inputs:
+            % x1, y1, r1: Position and radius of the first joint
+            % x2, y2, r2: Position and radius of the second joint
+            % pointX, pointY: Previous point position
+            % index: Index of the intersection point to use (1 or 2)
+        
+            % Calculate the distance between the two centers
+            d = sqrt((x2 - x1)^2 + (y2 - y1)^2);
+        
+            % Check if the circles intersect
+            if d > r1 + r2 || d < abs(r1 - r2) || d == 0
+                error('Circles do not intersect or are degenerate.');
+            end
+        
+            % Calculate the midpoint between the circle centers
+            a = (r1^2 - r2^2 + d^2) / (2 * d);
+            h = sqrt(r1^2 - a^2);
+        
+            % Determine the intersection points
+            px = x1 + a * (x2 - x1) / d;
+            py = y1 + a * (y2 - y1) / d;
+        
+            % Offset for intersection points
+            offset_x = h * (y2 - y1) / d;
+            offset_y = h * (x2 - x1) / d;
+        
+            % Two possible intersection points
+            intersection1 = [px + offset_x, py - offset_y];
+            intersection2 = [px - offset_x, py + offset_y];
+        
+            % Select the desired intersection point based on the index
+            if index == 1
+                selected_point = intersection1;
+            elseif index == 2
+                selected_point = intersection2;
+            else
+                error('Index must be 1 or 2.');
+            end
+        
+            % Assign the calculated position
+            x_calc = selected_point(1);
+            y_calc = selected_point(2);
+            curPoint = [x_calc, y_calc, 0];
+        end
+
+
     end
 end
