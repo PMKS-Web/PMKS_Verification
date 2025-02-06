@@ -53,14 +53,17 @@ addpath(utilsFolderPath);
 Mechanism.LinkCoM.AB(iteration, :) = PosSolverUtils.circleCircleIntersection(A(1), A(2), Mechanism.LinkLength.AB_CoM_A, Mechanism.Joint.B(iteration - 1, 1), Mechanism.Joint.B(iteration - 1, 2), Mechanism.LinkLength.AB_CoM_B, Mechanism.LinkCoM.AB(iteration - 1, 1), Mechanism.LinkCoM.AB(iteration - 1, 2));
 Mechanism.LinkCoM.BCE(iteration, :) = PosSolverUtils.circleCircleIntersection(B(1), B(2), Mechanism.LinkLength.BCE_CoM_B, Mechanism.Joint.C(iteration - 1, 1), Mechanism.Joint.C(iteration - 1, 2), Mechanism.LinkLength.BCE_CoM_C, Mechanism.LinkCoM.BCE(iteration - 1, 1), Mechanism.LinkCoM.BCE(iteration - 1, 2));
 
-Mechanism.Angle.AB(iteration, :) = [0,0,rad2deg(atan2(Mechanism.LinkCoM.AB(iteration,2) - A(2), Mechanism.LinkCoM.AB(iteration,1) - A(1)))];
-Mechanism.Angle.BCE(iteration, :) = [0,0,rad2deg(atan2(Mechanism.LinkCoM.BCE(iteration,2) - B(2), Mechanism.LinkCoM.BCE(iteration,1) - B(1)))];
+Mechanism.Angle.Link.AB(iteration, :) = [0,0,rad2deg(atan2(Mechanism.LinkCoM.AB(iteration,2) - A(2), Mechanism.LinkCoM.AB(iteration,1) - A(1)))];
+Mechanism.Angle.Link.BCE(iteration, :) = [0,0,rad2deg(atan2(Mechanism.LinkCoM.BCE(iteration,2) - B(2), Mechanism.LinkCoM.BCE(iteration,1) - B(1)))];
 
+Mechanism.Angle.Joint.E(iteration, :) = [0 0 rad2deg(atan2(E(2) - C(2), E(1) - C(1)))];
 
-if (forwardDir)
-    Mechanism.inputSpeed(iteration) = Mechanism.inputSpeed(1);
-else
-    Mechanism.inputSpeed(iteration) = Mechanism.inputSpeed(1) * -1;
+for inputSpeedCol = 1:1:length(Mechanism.inputSpeed(1,:))
+    if (forwardDir)
+        Mechanism.inputSpeed(iteration, inputSpeedCol) = Mechanism.inputSpeed(1, inputSpeedCol);
+    else
+        Mechanism.inputSpeed(iteration, inputSpeedCol) = Mechanism.inputSpeed(1, inputSpeedCol) * -1;
+    end
 end
 iteration = iteration + 1;
 end

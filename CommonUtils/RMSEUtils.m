@@ -728,21 +728,28 @@ sensorColumnsMap = containers.Map(...
     struct('Angle', 14:16, 'AngVel', 17:19)});
 columns = sensorColumnsMap(sensorType).(dataType);
 
-binarySignal = rawData.Var3;  % Adjust 'Var3' to the correct variable name if different
+% binarySignal = rawData.Var3;  % Adjust 'Var3' to the correct variable name if different
 
 % Identify valid data segments based on binary signals
-zeroIndices = find(binarySignal == 0);
-validSegments = find(diff(zeroIndices) > 1);  % Find non-consecutive ones
+% TODO (ALEX): Make sure that zeroIndices is determined similar to
+% processWitMotionData
+%    zeroCrossings = find(diff(sign(inputLinkArray)) > 0) + 1;
+% zeroIndices = find(binarySignal == 0);
+% validSegments = find(diff(zeroIndices) > 1);  % Find non-consecutive ones
+zeroCrossings = find(diff(sign(rawData{1:end-1, 10})) == 2);
 
-if isempty(validSegments) || length(validSegments) < 2
+% find(diff(sign(rawData{1:end-1, 10})) > 0) + 1;
+
+
+if length(zeroCrossings) < 3
     error('Valid data segments not found.');
 end
 
 % TODO: Make sure to utilize the correct zeroIndex
 
 % Define the range for valid data based on identified segments
-validStartIndex = zeroIndices(validSegments(1));
-validEndIndex = zeroIndices(validSegments(2));
+validStartIndex = zeroCrossings(2);
+validEndIndex = zeroCrossings(3);
 
 % Extract the valid data range
 validData = rawData(validStartIndex+1:validEndIndex, :);
@@ -799,13 +806,110 @@ timestamps = timestamps / 1000;
 coolTermData.Time = timestamps;
 % TODO: Utilize the desired map here
 coolTermData.Values = table2array(YData);  % Extracted values based on dataType and sensor
-if (contains([sensorType dataType], 'EAngVel') || contains([sensorType dataType], 'FAngVel'))
+% if (contains([sensorType dataType], 'EAngVel') || contains([sensorType dataType], 'FAngVel'))
+if (contains([sensorType dataType], 'EAngVel') || contains([sensorType dataType], 'FAngle'))
     coolTermData.Values = coolTermData.Values * -1;
 end
 end
 
 function pythonGraphData = processPythonGraphData(rawData, sensorType, sensorDataFlipMap, sensorInputMap, pullColumnDataMap, determineMap, dataType)
+% Constants for column indices
+TIMESTEP_COL = 1;
+HALL_SENSOR_COL = 2;
+EST_RPM_COL = 3;
+BNO_VL_PISTON = 4;
+BNO_ANG_VEL_COL = 7;
+% BNO_ORIENTATION_START_COL = 5; % X, Y, Z orientation start from this column
+% BNO_ORIENTATION_END_COL = 7; % X, Y, Z orientation end at this column
+% BNO_ANG_VEL_COL = 8;
 
+binarySignal = rawData.HallEffectSensor;  % Adjust 'Var3' to the correct variable name if different
+
+% Identify valid data segments based on binary signals
+oneIndices = find(binarySignal == 1);
+validSegments = find(diff(oneIndices) > 1);  % Find non-consecutive ones
+
+if isempty(validSegments) || length(validSegments) < 2
+    error('Valid data segments not found.');
+end
+
+if isempty(validSegments) || length(validSegments) < 2
+    error('Valid data segments not found.');
+end
+
+% Define the range for valid data based on identified segments
+validStartIndex = oneIndices(validSegments(1));
+validEndIndex = oneIndices(validSegments(2));
+
+% Extract data within the valid range
+validData = rawData(validStartIndex:validEndIndex, :);
+
+% Determine columns based on dataType
+% switch dataType
+%     case 'Angle'
+%         columns = BNO_ORIENTATION_START_COL:BNO_ORIENTATION_END_COL;
+%     case 'AngVel'
+%         columns = BNO_ANG_VEL_COL;
+%     case 'LinAcc'
+%         columns = ADXL_PISTON_LIN_ACC_COL;
+%     otherwise
+%         error('Unknown dataType specified');
+% end
+
+% Insert a time step column based on estimated RPM (convert to radians per second first)
+% estRpm = rawData{validStartIndex, EST_RPM_COL};
+% omega = estRpm * (2 * pi / 60); % Convert RPM to radians per second
+% timesteps = (0 : height(validData) - 1)' / omega; % Create a timestep array
+% validData.Timestep = seconds(timesteps); % Insert as duration in seconds
+% validData.Timestep = seconds(validData)
+% Assuming 'validData' is your table with a 'Time' column that are durations
+firstTimestamp = validData.Timestamp(1); % Get the first timestamp
+
+% Subtract the first timestamp from all timestamps to get the relative times
+relativeTimes = validData.Timestamp - firstTimestamp;
+
+% Convert the relative times from durations to seconds
+
+
+% Now 'validData.Timestep' contains the time in seconds relative to the first timestamp
+
+
+% Select and store the desired data based on dataType and sensor
+pythonGraphData = struct();
+% pythonGraphData.Time = validData.Timestep; % Use the new Timestep column
+% pythonGraphData.Values = validData(:, columns); % Data of interest
+% pythonGraphData.SensorID = sensor; % Include sensor ID for reference
+
+% yColumnMap = containers.Map(...
+%     {'EAngle', 'EAngVel', 'FLinAcc'}, ...
+%     {2, 1, 1});
+
+% Get the correct Y column index using the map
+% sensorID = sensorMap(sensorType);
+% sensorID =
+
+% yColumnIndex = columns(yColumnMap([sensorType dataType]));
+% TODO: Adjust accordingly once other sensors are added
+% if (strcmp(dataType, 'Angle'))
+%     yColumnIndex = BNO_ANG_VEL_COL;
+% elseif (strcmp(dataType, 'AngVel'))
+%     yColumnIndex = BNO_ANG_VEL_COL;
+% else
+% error('INVALID DATATYPE. PLEASE USE "Angle" OR "AngVel"');
+% end
+yColumnIndex = BNO_ANG_VEL_COL;
+
+YData = table2array(validData(:, yColumnIndex));
+% XData = seconds(relativeTimes / 1000);
+XData = relativeTimes / 1000;
+% Refine data by ensuring continuity and removing spikes (maybe do later)
+% refinedData = validData(refinedDataIndices, :);
+% continuousData = removeSpikes(refinedData, columns);
+
+% Store processed data for output
+% pythonGraphData.Time = XData;  % Time column
+pythonGraphData.Time = XData;
+pythonGraphData.Values = YData;  % Extracted values based on dataType and sensor
 end
 
 % function witMotionData = processWitMotionData(rawData, sensorType, sensorDataFlipMap, sensorInputMap, pullColumnDataMap, determineMap, dataType)
@@ -926,7 +1030,7 @@ function witMotionData = processWitMotionData(rawData, sensorType, sensorDataFli
     inputStartColumn = find(contains(inputLinkData.Properties.VariableNames, "Angle X"));
 
     % Determine the relevant column for the input link using pullColumnDataMap
-    inputColumnIndex = inputStartColumn + pullColumnDataMap(strcat(sensorType, dataType)) - 1;
+    inputColumnIndex = inputStartColumn + pullColumnDataMap(strcat(sensorInputMap(sensorType), dataType)) - 1;
     inputLinkArray = table2array(inputLinkData(:, inputColumnIndex));
 
     % Find zero crossings for the input link
@@ -970,9 +1074,15 @@ function witMotionData = processWitMotionData(rawData, sensorType, sensorDataFli
         values = flip(values * -1);
     end
 
+    % if (contains([sensorType dataType], 'EAngVel') || contains([sensorType dataType], 'FAngle'))
+
     % Convert units if necessary
     if contains([letterMap(sensorID) dataType], 'AngVel')
         values = values * pi / 180; % Convert from deg/s to rad/s
+    end
+
+    if (contains([sensorType dataType], 'HAngVel'))
+        values = values * -1;
     end
 
     % Prepare output structure

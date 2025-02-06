@@ -21,7 +21,7 @@ addpath(utilsFolderPath);
 
 sensorMap = containers.Map(...
     {'H', 'I'}, ...
-    {'d2:5a:50:4a:21:12', 'ef:e4:2c:bf:73:a9'});
+    {'c3:a3:c5:ed:f8:8e', 'ef:e4:2c:bf:73:a9'});
 
 % Define paths
 witMotionPath = fullfile(pwd, 'Experimental', 'WitMotion');
@@ -156,8 +156,8 @@ GeneralUtils.exportMatricesToCSV(baseDir, csvDir);
 baseDir = 'Force';
 GeneralUtils.exportMatricesToCSV(baseDir, csvDir);
 
-% baseDir = 'Stress';
-% GeneralUtils.exportMatricesToCSV(baseDir, csvDir);
+baseDir = 'Stress';
+GeneralUtils.exportMatricesToCSV(baseDir, csvDir);
 
 load("Mechanism")
 
