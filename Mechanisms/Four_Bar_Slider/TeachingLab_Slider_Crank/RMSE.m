@@ -12,7 +12,7 @@ function rmse = calculateRMSE(expDataSet, theoDataSet, sensor, sensorSourceMap, 
 
     % Retrieve data
     expData = RMSEUtils.retrieveExpData(expDataSet, sensor, sensorSourceMap, sensorInputMap, sensorDataFlipMap, pullColumnDataMap, determineMap, dataType, file);
-    theoData = RMSEUtils.retrieveTheoData(theoDataSet, expData, sensor, dataType, file, determineAdjustment, determineOffset, fileToSpeedMap);
+    theoData = RMSEUtils.retrieveTheoData(theoDataSet, expData, sensor, sensorSourceMap, dataType, file, determineAdjustment, determineOffset, fileToSpeedMap);
 
     % Validate data
     if isempty(expData) || isempty(theoData)
@@ -33,7 +33,7 @@ function rmse = calculateRMSE(expDataSet, theoDataSet, sensor, sensorSourceMap, 
     rmse = sqrt(mean((filteredExpData - filteredTheoData).^2));
 
     % Generate and save the figure
-    RMSEUtils.generateAndSaveFigure(timestamps, expData.Values, theoData.Time, theoData.Values, interpolatedTheoData, sensor, dataType, file, fileToSpeedMap);
+    RMSEUtils.generateAndSaveFigure(timestamps, expData.Values, theoData.Time, theoData.Values, interpolatedTheoData, sensor, sensorSourceMap, dataType, file, fileToSpeedMap);
 end
 
 function [selectedMap, letterMap] = determineMap(rawData, SENSOR_ID_COL)

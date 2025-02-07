@@ -121,9 +121,15 @@ classdef RMSEUtils
             filteredTheoData = theoValues(nonOutlierMask);
         end
 
-        function generateAndSaveFigure(timestamps, expValues, theoTime, theoValues, interpolatedTheoData, sensor, dataType, speed, fileToSpeedMap)
+        function generateAndSaveFigure(timestamps, expValues, theoTime, theoValues, interpolatedTheoData, sensor, sensorSourceMap, dataType, speed, fileToSpeedMap)
 %             speedStr = fileToSpeedMap(strrep(speed, '_csv', '.csv'));
-            speedStrDouble = fileToSpeedMap(strrep(speed, '_csv', '.csv'));
+            source = sensorSourceMap(sensor);
+            if (strcmp(source, 'CoolTerm'))
+                speedStrDouble = fileToSpeedMap(strrep(speed, '_csv', '.csv'));
+            elseif(strcmp(source, 'PythonGraph'))
+                speedStrDouble = fileToSpeedMap(strrep(speed, '_csv', '.xlsx'));
+            end
+            % speedStrDouble = fileToSpeedMap(strrep(speed, '_csv', '.csv'));
 
             % Convert double to a string with at most 2 decimal places
             speedStr = sprintf('%.2f', speedStrDouble);
@@ -481,6 +487,8 @@ classdef RMSEUtils
             source = sensorSourceMap(sensor);
             if (strcmp(source, 'CoolTerm'))
                 speed =  strrep(speed, '_csv', '_xlsx');
+            elseif(strcmp(source, 'PythonGraph'))
+                speed =  strrep(speed, '_csv', '_xlsx');
             end
             % Check if the required data is available
             if isfield(dataSet, source) && isfield(dataSet.(source), speed)
@@ -501,9 +509,15 @@ classdef RMSEUtils
             end
         end
 
-        function theoData = retrieveTheoData(dataSet, expData, sensor, dataType, file, determineAdjustment, determineOffset, fileToSpeedMap)
+        function theoData = retrieveTheoData(dataSet, expData, sensor, sensorSourceMap, dataType, file, determineAdjustment, determineOffset, fileToSpeedMap)
             % Determine the main category based on dataType
-            speedDouble = fileToSpeedMap(strrep(file, '_csv', '.csv'));
+            source = sensorSourceMap(sensor);
+            if (strcmp(source, 'CoolTerm'))
+                speedDouble = fileToSpeedMap(strrep(file, '_csv', '.csv'));
+            elseif(strcmp(source, 'PythonGraph'))
+                speedDouble = fileToSpeedMap(strrep(file, '_csv', '.xlsx'));
+            end
+            % speedDouble = fileToSpeedMap(strrep(file, '_csv', '.csv'));
 
             % Extract integer and fractional parts
             integerPart = floor(speedDouble);

@@ -20,7 +20,7 @@ witMotionPath = fullfile(pwd, 'Experimental', 'PythonGraph');
 [input_speed_str, fileToSpeedMap] = SpeedDetermination.determineSpeeds(witMotionPath, sensorMap('E'));
 
 
-% % Initialize Mechanism structure with necessary fields
+% Initialize Mechanism structure with necessary fields
 % Mechanism = struct();
 % 
 % A=[13.79,10.01,0]; % motor input
@@ -109,9 +109,9 @@ witMotionPath = fullfile(pwd, 'Experimental', 'PythonGraph');
 % scenarios = [1 1 0];
 % Mechanism = ForceSolver(Mechanism, scenarios);
 % save('Mechanism.mat', 'Mechanism');
-
-% Mechanism = StressSolver(Mechanism, scenarios);
-% save('Mechanism.mat', 'Mechanism');
+% 
+% % Mechanism = StressSolver(Mechanism, scenarios);
+% % save('Mechanism.mat', 'Mechanism');
 % 
 % csvDir = 'CSVOutput';
 % 
@@ -121,8 +121,8 @@ witMotionPath = fullfile(pwd, 'Experimental', 'PythonGraph');
 % baseDir = 'Force';
 % GeneralUtils.exportMatricesToCSV(baseDir, csvDir);
 
-% baseDir = 'Stress';
-% GeneralUtils.exportMatricesToCSV(baseDir, csvDir);
+% % baseDir = 'Stress';
+% % GeneralUtils.exportMatricesToCSV(baseDir, csvDir);
 
 load('Mechanism')
 
