@@ -3,6 +3,8 @@ artifacts/
 .external/
 **/bin/
 **/obj/
-node_modules/
+node_modules
+__pycache__/
+*.py[cod]
 Mechanisms/**/CSVOutput/
 Mechanisms/**/Mechanism.mat
