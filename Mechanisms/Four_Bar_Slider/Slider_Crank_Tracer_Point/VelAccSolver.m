@@ -111,7 +111,7 @@ omegaBCD=[0 0 wBCD];
 
 % A->B->C->D->A
 % V_ba + V_cb + V_dc + V_ad = 0
-eqn1=velSolver(omegaAB,B-A)+velSolver(omegaBCD,C-B)+[V_c*cos(0) V_c*sin(0) 0]==0;
+eqn1=velSolver(omegaAB,B-A)+velSolver(omegaBCD,C-B)-[V_c*cos(0) V_c*sin(0) 0]==0;
 solution=solve(eqn1,[wBCD, V_c]);
 
 % Store all the determined angular velocities
@@ -169,7 +169,7 @@ D = Mechanism.TracerPoint.D(iter,:);
 
 % A->B->C->D->A
 % A_ba + A_cb + A_dc + A_ad = 0
-eqn1=accSolver(AngVel.AB,alphaAB, B-A)+accSolver(AngVel.BCD,alphaBCD,C-B)+[A_c*cos(0) A_c*sin(0) 0]==0;
+eqn1=accSolver(AngVel.AB,alphaAB, B-A)+accSolver(AngVel.BCD,alphaBCD,C-B)-[A_c*cos(0) A_c*sin(0) 0]==0;
 
 solution=solve(eqn1,[aBCD A_c]);
 

@@ -2,7 +2,7 @@ function Mechanism = ForceSolver(Mechanism, scenarios)
     Mechanism = ForceSolverUtils.ForceSolver(Mechanism, scenarios, @performForceAnalysis);
 end
 
-function solution = performForceAnalysis(Mechanism, iter, JointPos, LinkCoMPos, newton, grav, friction)
+function solution = performForceAnalysis(Mechanism, iter, speedStr, JointPos, LinkCoMPos, newton, grav, friction)
 % Here, you'd implement your equations based on static conditions
 % For each joint and link, calculate forces and moments ensuring sum of forces = 0 and sum of moments = 0
 
@@ -18,17 +18,17 @@ massMoICD = Mechanism.MassMoI.CD;
 massMoIEF = Mechanism.MassMoI.EF;
 massMoIFG = Mechanism.MassMoI.FG;
 
-A_ab = Mechanism.AngAcc.AB(iter,:);
-A_bce = Mechanism.AngAcc.BCE(iter,:);
-A_cd = Mechanism.AngAcc.CD(iter,:);
-A_ef = Mechanism.AngAcc.EF(iter,:);
-A_fg = Mechanism.AngAcc.FG(iter,:);
+A_ab = Mechanism.AngAcc.AB.(speedStr)(iter,:);
+A_bce = Mechanism.AngAcc.BCE.(speedStr)(iter,:);
+A_cd = Mechanism.AngAcc.CD.(speedStr)(iter,:);
+A_ef = Mechanism.AngAcc.EF.(speedStr)(iter,:);
+A_fg = Mechanism.AngAcc.FG.(speedStr)(iter,:);
 
-A_ab_com = Mechanism.LinAcc.LinkCoM.AB(iter,:);
-A_bce_com = Mechanism.LinAcc.LinkCoM.BCE(iter,:);
-A_cd_com = Mechanism.LinAcc.LinkCoM.CD(iter,:);
-A_ef_com = Mechanism.LinAcc.LinkCoM.EF(iter,:);
-A_fg_com = Mechanism.LinAcc.LinkCoM.FG(iter,:);
+A_ab_com = Mechanism.LinAcc.LinkCoM.AB.(speedStr)(iter,:);
+A_bce_com = Mechanism.LinAcc.LinkCoM.BCE.(speedStr)(iter,:);
+A_cd_com = Mechanism.LinAcc.LinkCoM.CD.(speedStr)(iter,:);
+A_ef_com = Mechanism.LinAcc.LinkCoM.EF.(speedStr)(iter,:);
+A_fg_com = Mechanism.LinAcc.LinkCoM.FG.(speedStr)(iter,:);
 
 % This is a placeholder for the actual static analysis logic
 % You'll need to adapt this to your specific requirements

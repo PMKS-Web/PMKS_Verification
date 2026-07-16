@@ -52,7 +52,7 @@ wPiston = massPiston*g*grav;
 % Unknown torque of the system
 tT=[0 0 T];
 
-mu = 0.34; % Coefficient of friction
+mu = 0.34 * friction; % Coefficient of friction for friction-enabled scenarios
 
 % Normal Force
 % F_N = [N*cos(theta), N*sin(theta), 0];
@@ -83,7 +83,7 @@ A_theta = atan2(A_noFriction_y, A_noFriction_x);
 B_theta = atan2(B_noFriction_y, B_noFriction_x);
 
 A_friction_Mag = norm([A_noFriction_x, A_noFriction_y]);
-B_friction_Mag = norm([B_noFriction_x, A_noFriction_y]);
+B_friction_Mag = norm([B_noFriction_x, B_noFriction_y]);
 
 % Correct normal force direction
 F_normal_A = [A_friction_Mag*cos(A_theta), A_friction_Mag*sin(A_theta), 0];

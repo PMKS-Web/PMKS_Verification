@@ -174,13 +174,7 @@ classdef PosSolverUtils
 
         % Utility function for circle-circle intersection calculation
         function result = circleCircleIntersection(x1, y1, r1, x2, y2, r2, pointX, pointY)
-            % Find intersection points
-            [xIntersect, yIntersect] = circcirc(x1, y1, r1, x2, y2, r2);
-
-            % Check if the intersection points are determined
-            if isempty(xIntersect) || isempty(yIntersect) || isnan(xIntersect(1)) || isnan(yIntersect(1))
-                [xIntersect, yIntersect] = PosSolverUtils.circleCircleMethod(x1, y1, r1, x2, y2, r2);
-            end
+            [xIntersect, yIntersect] = PosSolverUtils.circleCircleMethod(x1, y1, r1, x2, y2, r2);
             if isempty(xIntersect) || isempty(yIntersect)
                 result = [];
                 return;
@@ -777,35 +771,36 @@ classdef PosSolverUtils
         end
 
         function [xIntersect, yIntersect] = circleCircleMethod(x1, y1, r1, x2, y2, r2)
-            syms x y
-            eq1 = (x - x1)^2 + (y - y1)^2 == r1^2;
-            eq2 = (x - x2)^2 + (y - y2)^2 == r2^2;
+            dx = x2 - x1;
+            dy = y2 - y1;
+            distance = hypot(dx, dy);
+            scale = max([1, abs(r1), abs(r2), distance]);
+            tolerance = 1e-12 * scale;
 
-            sol = solve([eq1, eq2], [x, y]);
-
-            % Threshold for considering the imaginary part significant
-            imaginaryThreshold = 1e-5; % Adjust this value based on your application's tolerance
-
-            % Evaluating solutions (assuming sol.x and sol.y are symbolic solutions)
-            xSolEval = [eval(sol.x(1)), eval(sol.x(2))];
-            ySolEval = [eval(sol.y(1)), eval(sol.y(2))];
-
-            % Initialize empty arrays to hold the processed solutions
-            xIntersect = [];
-            yIntersect = [];
-
-            % Check the imaginary parts of the x solutions
-            if all(abs(imag(xSolEval)) <= imaginaryThreshold)
-                xIntersect = real(xSolEval);
+            if distance <= tolerance || ...
+                    distance > r1 + r2 + tolerance || ...
+                    distance < abs(r1 - r2) - tolerance
+                xIntersect = [];
+                yIntersect = [];
+                return;
             end
 
-            % Check the imaginary parts of the y solutions
-            if all(abs(imag(ySolEval)) <= imaginaryThreshold)
-                yIntersect = real(ySolEval);
+            along = (r1^2 - r2^2 + distance^2) / (2 * distance);
+            heightSquared = r1^2 - along^2;
+            squaredTolerance = 1e-12 * max([1, r1^2, r2^2]);
+            if heightSquared < -squaredTolerance
+                xIntersect = [];
+                yIntersect = [];
+                return;
             end
+            height = sqrt(max(0, heightSquared));
 
-            % xIntersect and yIntersect will be empty if any imaginary part was significant
-
+            midpointX = x1 + along * dx / distance;
+            midpointY = y1 + along * dy / distance;
+            offsetX = -dy * height / distance;
+            offsetY = dx * height / distance;
+            xIntersect = [midpointX + offsetX, midpointX - offsetX];
+            yIntersect = [midpointY + offsetY, midpointY - offsetY];
         end
 
 %         function [x_calc, y_calc, determined_index] = determineTracerJoint(x1, y1, r1, x2, y2, r2, pointX, pointY, index)
