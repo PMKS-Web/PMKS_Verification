@@ -27,7 +27,11 @@ summaries = struct([]);
 for i = 1:numel(caseNames)
     fprintf('Running %s...\n', caseNames{i});
     summary = runOneCase(caseNames{i}, repoRoot, outputRoot);
-    summaries(end + 1) = summary; %#ok<AGROW>
+    if isempty(summaries)
+        summaries = summary;
+    else
+        summaries(end + 1) = summary; %#ok<AGROW>
+    end
     fprintf('  PASS: %d rows, %d CSV files\n', summary.rows, summary.csvFiles);
 end
 
