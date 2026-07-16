@@ -127,10 +127,10 @@ LinAcc.Joint.A = [0 0 0];
 LinAcc.Joint.B = VelAccSolverUtils.accSolver(AngVel.ABH, AngAcc.ABH,B-A);
 LinAcc.Joint.C = VelAccSolverUtils.accSolver(AngVel.CDEI, AngAcc.CDEI,C-D);
 LinAcc.Joint.D = [0 0 0];
-LinAcc.Joint.E = VelAccSolverUtils.accSolver(AngVel.BCFG, AngAcc.CDEI,E-D);
+LinAcc.Joint.E = VelAccSolverUtils.accSolver(AngVel.CDEI, AngAcc.CDEI,E-D);
 LinAcc.Joint.F = VelAccSolverUtils.accSolver(AngVel.BCFG, AngAcc.BCFG,F-C) + LinAcc.Joint.C;
-LinAcc.Joint.G = VelAccSolverUtils.accSolver(AngVel.CDEI, AngAcc.BCFG,G-C) + LinAcc.Joint.C;
-LinAcc.Joint.H = VelAccSolverUtils.accSolver(AngVel.BCFG, AngAcc.ABH,H-A);
+LinAcc.Joint.G = VelAccSolverUtils.accSolver(AngVel.BCFG, AngAcc.BCFG,G-C) + LinAcc.Joint.C;
+LinAcc.Joint.H = VelAccSolverUtils.accSolver(AngVel.ABH, AngAcc.ABH,H-A);
 LinAcc.Joint.I = VelAccSolverUtils.accSolver(AngVel.CDEI, AngAcc.CDEI,I-D);
 
 % Determine the accelerations at each link's center of mass

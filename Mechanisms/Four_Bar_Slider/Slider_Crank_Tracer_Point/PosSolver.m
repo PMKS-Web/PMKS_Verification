@@ -75,6 +75,10 @@ jointNames = fieldnames(Mechanism.Joint);
 for i = 1:length(jointNames)
     Mechanism.Joint.(jointNames{i}) = Mechanism.Joint.(jointNames{i})(1:iteration-1, :);
 end
+tracerPointNames = fieldnames(Mechanism.TracerPoint);
+for i = 1:length(tracerPointNames)
+    Mechanism.TracerPoint.(tracerPointNames{i}) = Mechanism.TracerPoint.(tracerPointNames{i})(1:iteration-1, :);
+end
 linkNames = fieldnames(Mechanism.LinkCoM);
 for i = 1:length(linkNames)
     Mechanism.LinkCoM.(linkNames{i}) = Mechanism.LinkCoM.(linkNames{i})(1:iteration-1,:);

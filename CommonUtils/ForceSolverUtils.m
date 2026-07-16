@@ -8,7 +8,7 @@ classdef ForceSolverUtils
             numSpeeds = size(Mechanism.inputSpeed, 2); % Assuming inputSpeed has dimensions: iterations x speeds
 
             % Initialize fields for storing static analysis data
-            [Mechanism] = ForceSolverUtils.initializeForceSolvers(Mechanism, numIterations, numSpeeds);
+            [Mechanism] = ForceSolverUtils.initializeForceSolvers(Mechanism, numIterations, numSpeeds, scenarios);
 
 
             % Iterate through all iterations for static analysis
@@ -161,37 +161,32 @@ classdef ForceSolverUtils
             % Check if 'N' exists in the solution and update normal forces
             if isfield(solution, 'N')
                 N = double(solution.N);  % Extract N value
-                normalForceX = N * cos(Mechanism.Theta);
-                normalForceY = N * sin(Mechanism.Theta);
+                % The guide reaction is normal to the slider axis.
+                normalForceX = -N * sin(Mechanism.Theta);
+                normalForceY = N * cos(Mechanism.Theta);
                 Mechanism.ForceAnalysis.(forceType).(gravType).(frictionType).(speedStr).NormalForce(iter,:) = [normalForceX, normalForceY, 0];
             end
         end
 
-        function [Mechanism] = initializeForceSolvers(Mechanism, numIterations, numSpeeds)
-            % Define force conditions and categories
-            forceTypes = {'Static', 'Newton'};
-            gravTypes = {'Grav', 'NoGrav'};
-            frictionTypes = {'Friction', 'NoFriction'};
+        function [Mechanism] = initializeForceSolvers(Mechanism, numIterations, numSpeeds, scenarios)
+            % Initialize only requested scenarios so uncomputed combinations are
+            % never exported as plausible all-zero reference data.
             jointNames = fieldnames(Mechanism.Joint);
 
-            % Initialize force analysis data fields dynamically
-            for ft = forceTypes
-                for gt = gravTypes
-                    for frt = frictionTypes
-                        for speedIndex = 1:numSpeeds
-                            % speedStr = ['f' num2str(Mechanism.input_speed_str(speedIndex)) 'RPM'];
-                            speedStrTemp = strrep(num2str(Mechanism.input_speed_str(speedIndex)), '.', '_');  % Replace '.' with '_'
-                            speedStr = ['f' speedStrTemp 'RPM'];  % Construct the new name
-                            % Prepare the structure for each configuration
-                            for jointIndex = 1:length(jointNames)
-                                jointName = jointNames{jointIndex};
-                                Mechanism.ForceAnalysis.(ft{1}).(gt{1}).(frt{1}).(speedStr).Joint.(jointName) = zeros(numIterations, 3, 'double');
-                            end
-                            % Initialize other data under the same speed
-                            Mechanism.ForceAnalysis.(ft{1}).(gt{1}).(frt{1}).(speedStr).Torque = zeros(numIterations, 3, 'double');
-                            Mechanism.ForceAnalysis.(ft{1}).(gt{1}).(frt{1}).(speedStr).NormalForce = zeros(numIterations, 3, 'double');
-                        end
+            for scenario = scenarios.'
+                if scenario(1) == 1, forceType = 'Newton'; else, forceType = 'Static'; end
+                if scenario(2) == 1, gravType = 'Grav'; else, gravType = 'NoGrav'; end
+                if scenario(3) == 1, frictionType = 'Friction'; else, frictionType = 'NoFriction'; end
+
+                for speedIndex = 1:numSpeeds
+                    speedStrTemp = strrep(num2str(Mechanism.input_speed_str(speedIndex)), '.', '_');
+                    speedStr = ['f' speedStrTemp 'RPM'];
+                    for jointIndex = 1:length(jointNames)
+                        jointName = jointNames{jointIndex};
+                        Mechanism.ForceAnalysis.(forceType).(gravType).(frictionType).(speedStr).Joint.(jointName) = zeros(numIterations, 3, 'double');
                     end
+                    Mechanism.ForceAnalysis.(forceType).(gravType).(frictionType).(speedStr).Torque = zeros(numIterations, 3, 'double');
+                    Mechanism.ForceAnalysis.(forceType).(gravType).(frictionType).(speedStr).NormalForce = zeros(numIterations, 3, 'double');
                 end
             end
         end
