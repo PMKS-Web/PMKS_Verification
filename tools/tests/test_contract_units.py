@@ -10,6 +10,7 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 
+from compare_baseline import compare_json  # noqa: E402
 from reference_data import (  # noqa: E402
     ContractError,
     Sample,
@@ -22,6 +23,25 @@ from reference_data import (  # noqa: E402
 
 
 class ContractUnitTests(unittest.TestCase):
+    def test_json_baseline_uses_same_source_numeric_tier(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = root / "first.json"
+            second = root / "second.json"
+            first.write_text('{"metric":1.0,"label":"stable"}\n', encoding="utf-8")
+            second.write_text('{"metric":1.0000000000005,"label":"stable"}\n', encoding="utf-8")
+            compare_json(first, second)
+
+    def test_json_baseline_rejects_material_numeric_change(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = root / "first.json"
+            second = root / "second.json"
+            first.write_text('{"metric":1.0}\n', encoding="utf-8")
+            second.write_text('{"metric":1.000000001}\n', encoding="utf-8")
+            with self.assertRaises(ContractError):
+                compare_json(first, second)
+
     def test_csv_precision_rejects_coarsely_rounded_value(self) -> None:
         with self.assertRaises(ContractError):
             validate_float_token("3.14159", Path("value.csv"), 2, "x")

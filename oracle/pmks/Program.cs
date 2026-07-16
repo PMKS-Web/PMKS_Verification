@@ -23,7 +23,7 @@ foreach (var manifest in manifests)
     var positive = GenerateRun(manifest, topology, +1);
     var positiveRepeat = GenerateRun(manifest, topology, +1);
     var negative = GenerateRun(manifest, topology, -1);
-    AssertRepeatable(manifest.CaseId, positive, positiveRepeat);
+    AssertRepeatable(manifest.CaseId, topology, positive, positiveRepeat);
     AssertRunCapabilities(manifest, topology, positive, negative);
     WriteCase(options.OutputRoot, manifest, topology, positive, negative);
     Console.WriteLine(
@@ -74,20 +74,20 @@ static RunResult GenerateRun(CaseManifest manifest, PmksTopology topology, int d
     }
 
     var canonical = candidates
-        .Select(pair => pair.Value.OrderBy(row => row, CanonicalRowComparer.Instance).First())
+        .Select(pair => pair.Value.OrderBy(row => row, new CanonicalRowComparer(topology)).First())
         .OrderBy(row => direction * row.Tick)
         .ToList();
     return new RunResult(direction, simulator.JointParameters.Count, simulator.CycleType, canonical);
 }
 
-static void AssertRepeatable(string caseId, RunResult first, RunResult second)
+static void AssertRepeatable(string caseId, PmksTopology topology, RunResult first, RunResult second)
 {
     if (first.Rows.Count != second.Rows.Count)
         throw new InvalidOperationException($"{caseId}: canonical PMKS row counts are not repeatable.");
     for (var row = 0; row < first.Rows.Count; row++)
     {
-        var left = first.Rows[row].ComparableValues();
-        var right = second.Rows[row].ComparableValues();
+        var left = first.Rows[row].ComparableValues(topology);
+        var right = second.Rows[row].ComparableValues(topology);
         if (left.Length != right.Length) throw new InvalidOperationException($"{caseId}: shape changed.");
         for (var value = 0; value < left.Length; value++)
         {
@@ -519,10 +519,18 @@ internal sealed class PmksTopology
 
 internal sealed record CanonicalRow(int Tick, double Time, double[,] Joints, double[,] Links)
 {
-    public double[] ComparableValues()
+    public double[] ComparableValues(PmksTopology topology)
     {
         var result = new List<double> { Tick };
-        foreach (var value in Joints) result.Add(value);
+        // PMKS reuses joint columns 6..8 as private auxiliary state for tracers and
+        // link CoMs. That state is not part of the oracle contract; only a declared
+        // prismatic joint exposes those columns as position/velocity/acceleration.
+        for (var row = 0; row < Joints.GetLength(0); row++)
+        for (var column = 0; column < 6; column++)
+            result.Add(Joints[row, column]);
+        foreach (var index in topology.PrismaticIndices.Values.Distinct().Order())
+        for (var column = 6; column < 9; column++)
+            result.Add(Joints[index, column]);
         for (var row = 0; row < Links.GetLength(0); row++)
         for (var column = 0; column < Links.GetLength(1); column++)
         {
@@ -541,14 +549,17 @@ internal sealed record CanonicalRow(int Tick, double Time, double[,] Joints, dou
 
 internal sealed class CanonicalRowComparer : IComparer<CanonicalRow>
 {
-    public static CanonicalRowComparer Instance { get; } = new();
+    private readonly PmksTopology topology;
+
+    public CanonicalRowComparer(PmksTopology topology) => this.topology = topology;
+
     public int Compare(CanonicalRow? first, CanonicalRow? second)
     {
         if (ReferenceEquals(first, second)) return 0;
         if (first is null) return -1;
         if (second is null) return 1;
-        var left = first.ComparableValues();
-        var right = second.ComparableValues();
+        var left = first.ComparableValues(topology);
+        var right = second.ComparableValues(topology);
         for (var index = 0; index < Math.Min(left.Length, right.Length); index++)
         {
             var comparison = left[index].CompareTo(right[index]);

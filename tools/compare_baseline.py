@@ -32,6 +32,8 @@ def compare(baseline: Path, candidate: Path, allow_missing: bool) -> None:
         second = candidate / relative
         if first.suffix == ".csv":
             compare_csv(first, second)
+        elif first.suffix == ".json":
+            compare_json(first, second)
         else:
             if first.read_bytes() != second.read_bytes():
                 raise ContractError(f"Unexplained baseline change: {relative}")
@@ -64,13 +66,48 @@ def compare_csv(first: Path, second: Path) -> None:
                 if left != right:
                     raise ContractError(f"{first}:{row_index}:{column_index}: text changed")
                 continue
-            scale = max(1.0, abs(first_number), abs(second_number))
-            ulp = max(math.ulp(first_number), math.ulp(second_number))
-            if abs(first_number - second_number) > 8 * ulp + 1e-12 * scale:
+            if not same_source_number(first_number, second_number):
                 raise ContractError(
                     f"{first}:{row_index}:{column_index}: same-source value changed "
                     f"{first_number:.17g} -> {second_number:.17g}"
                 )
+
+
+def compare_json(first: Path, second: Path) -> None:
+    expected = json.loads(first.read_text(encoding="utf-8"))
+    actual = json.loads(second.read_text(encoding="utf-8"))
+    compare_json_value(expected, actual, str(first))
+
+
+def compare_json_value(expected: object, actual: object, location: str) -> None:
+    if type(expected) is not type(actual):
+        raise ContractError(f"{location}: JSON type changed")
+    if isinstance(expected, dict):
+        if expected.keys() != actual.keys():
+            raise ContractError(f"{location}: JSON keys changed")
+        for key in expected:
+            compare_json_value(expected[key], actual[key], f"{location}.{key}")
+        return
+    if isinstance(expected, list):
+        if len(expected) != len(actual):
+            raise ContractError(f"{location}: JSON array length changed")
+        for index, (left, right) in enumerate(zip(expected, actual)):
+            compare_json_value(left, right, f"{location}[{index}]")
+        return
+    if isinstance(expected, float):
+        if not same_source_number(expected, actual):
+            raise ContractError(
+                f"{location}: same-source value changed {expected:.17g} -> {actual:.17g}"
+            )
+        return
+    if expected != actual:
+        raise ContractError(f"{location}: JSON value changed")
+
+
+def same_source_number(first: float, second: float) -> bool:
+    scale = max(1.0, abs(first), abs(second))
+    ulp = max(math.ulp(first), math.ulp(second))
+    return abs(first - second) <= 8 * ulp + 1e-12 * scale
 
 
 def main() -> None:

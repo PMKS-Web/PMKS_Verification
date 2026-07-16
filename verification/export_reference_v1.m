@@ -25,7 +25,8 @@ writeCsv(fullfile(matlabRoot, 'samples.csv'), ...
 
 jointSpecs = manifest.topology.joints;
 for i = 1:numel(jointSpecs)
-    jointId = jointSpecs(i).id;
+    jointSpec = jsonStruct(jointSpecs, i);
+    jointId = jointSpec.id;
     writePointSeries(fullfile(matlabRoot, 'joints', [jointId '.csv']), sampleIds, ...
         Mechanism.Joint.(jointId), speedValue(Mechanism.LinVel.Joint.(jointId), config.speedField), ...
         speedValue(Mechanism.LinAcc.Joint.(jointId), config.speedField));
@@ -33,7 +34,8 @@ end
 
 pointSpecs = manifest.topology.points;
 for i = 1:numel(pointSpecs)
-    pointId = pointSpecs(i).id;
+    pointSpec = jsonStruct(pointSpecs, i);
+    pointId = pointSpec.id;
     writePointSeries(fullfile(matlabRoot, 'points', [pointId '.csv']), sampleIds, ...
         Mechanism.TracerPoint.(pointId), speedValue(Mechanism.LinVel.Joint.(pointId), config.speedField), ...
         speedValue(Mechanism.LinAcc.Joint.(pointId), config.speedField));
@@ -49,8 +51,9 @@ end
 
 linkSpecs = manifest.topology.links;
 for i = 1:numel(linkSpecs)
-    linkId = linkSpecs(i).id;
-    basis = linkSpecs(i).angle_basis;
+    linkSpec = jsonStruct(linkSpecs, i);
+    linkId = linkSpec.id;
+    basis = linkSpec.angle_basis;
     firstPosition = namedPosition(Mechanism, basis{1});
     secondPosition = namedPosition(Mechanism, basis{2});
     theta = unwrap(atan2(secondPosition(:, 2) - firstPosition(:, 2), ...
