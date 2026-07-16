@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "case_id": "teaching_slider_crank",
+  "model_url": "https://motiongen.io/core",
+  "model_id": "MEjogZJd5srJlJ7nmOXN",
+  "model_title": "PMKS Verification - Teaching Slider-Crank - 15_1 RPM - Endpoint Ground",
+  "model_access": "authenticated-account",
+  "motiongen_app_version": "1.1.5",
+  "graph": {
+    "kind": "link",
+    "id": "AB"
+  },
+  "actuation": {
+    "profile": "constant-array",
+    "source_rpm": 15.1,
+    "target_rpm": 15.1,
+    "source_rad_s": 1.5812683023068625,
+    "target_rad_s": 1.5812683023068625
+  },
+  "source_units": {
+    "time": "s",
+    "length": "in",
+    "angle": "rad"
+  },
+  "original_filename": "link_table_7_16_2026_17_2_42.xlsx",
+  "original_xlsx_sha256": "4eca0f7d55315d3c8a2b3c59503192a1e4260ba4d30bc1e79cd5a8f0fa246f73",
+  "sheets": [
+    {
+      "name": "Sheet1",
+      "header": [
+        "Time [s]",
+        "Theta [rad]",
+        "Angular Vel. [rad/s]",
+        "Angular Accel. [rad/s^2]"
+      ],
+      "row_count": 3601
+    }
+  ],
+  "download_time_utc": "2026-07-16T21:02:42.480Z",
+  "normalization_script_sha256": "8a849972c60de0393fe4a40b2005c78f6dd605e82f886232eafc1308675d38bb",
+  "coordinate_transform": {
+    "spatial_scale": 3.3333333333333335,
+    "rotation": [
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "translation": [
+      0.4566666666666652,
+      10.01
+    ],
+    "speed_ratio": 1
+  },
+  "quantization_bound": {
+    "position": 0.0016666666666666668,
+    "speed": 0.0016666666666666668,
+    "acceleration": 0.0016666666666666668,
+    "angle": 0.0005,
+    "angular_velocity": 0.0005,
+    "angular_acceleration": 0.0005
+  },
+  "terminal_null_columns": [
+    "omega_rad_s",
+    "alpha_rad_s2"
+  ],
+  "normalized_csv": "AB.csv",
+  "normalized_csv_sha256": "9e3546619acd57176aca6c6a093bae147e6f7889fd213bee0b29e709ff79ae1f",
+  "original_discarded": true,
+  "renormalization_limitation": "The original XLSX is intentionally not committed; future normalization cannot be reproduced without re-exporting the retained MotionGen model."
+}

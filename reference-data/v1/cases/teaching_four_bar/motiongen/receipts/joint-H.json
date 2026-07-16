@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "case_id": "teaching_four_bar",
+  "model_url": "https://motiongen.io/core",
+  "model_id": "OocSpHMBTmcRQwFSJE9x",
+  "model_title": "PMKS Verification - Teaching Four-Bar - 10_31 RPM",
+  "model_access": "authenticated-account",
+  "motiongen_app_version": "1.1.5",
+  "graph": {
+    "kind": "joint",
+    "id": "H"
+  },
+  "actuation": {
+    "profile": "constant-array",
+    "source_rpm": 10.31,
+    "target_rpm": 10.31,
+    "source_rad_s": 1.0796606752836921,
+    "target_rad_s": 1.0796606752836921
+  },
+  "source_units": {
+    "time": "s",
+    "length": "in",
+    "angle": "rad"
+  },
+  "original_filename": "joint_table_7_16_2026_16_36_36.xlsx",
+  "original_xlsx_sha256": "ca7a94ff5a20a0376fb9a6eb9dbc86aeec346c42617952f32b54b9dcda32cf35",
+  "sheets": [
+    {
+      "name": "Sheet1",
+      "header": [
+        "Time [s]",
+        "x [in]",
+        "y [in]",
+        "Displacement [in]",
+        "Linear Vel. [in/s]",
+        "Linear Accel. [in/s^2]"
+      ],
+      "row_count": 3601
+    }
+  ],
+  "download_time_utc": "2026-07-16T20:36:36.960Z",
+  "normalization_script_sha256": "8a849972c60de0393fe4a40b2005c78f6dd605e82f886232eafc1308675d38bb",
+  "coordinate_transform": {
+    "spatial_scale": 1,
+    "rotation": [
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "translation": [
+      2.286,
+      0
+    ],
+    "speed_ratio": 1
+  },
+  "quantization_bound": {
+    "position": 0.0005,
+    "speed": 0.0005,
+    "acceleration": 0.0005,
+    "angle": 0.0005,
+    "angular_velocity": 0.0005,
+    "angular_acceleration": 0.0005
+  },
+  "terminal_null_columns": [
+    "speed",
+    "acceleration"
+  ],
+  "normalized_csv": "H.csv",
+  "normalized_csv_sha256": "ebeb664788f3a2198f1b9b984ef27d8ae985ef6d58032e063e2a423e3ee90824",
+  "original_discarded": true,
+  "renormalization_limitation": "The original XLSX is intentionally not committed; future normalization cannot be reproduced without re-exporting the retained MotionGen model."
+}
