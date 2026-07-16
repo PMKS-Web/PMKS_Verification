@@ -82,7 +82,11 @@ function [sampleIds, sweepIds, sweepIndices, angles, directions, times, conditio
     buildSamples(Mechanism, manifest, config)
 rowCount = size(Mechanism.Joint.A, 1);
 expectedSweeps = manifest.input.expected_sweeps;
-expectedRows = sum([expectedSweeps.rows]);
+expectedRows = 0;
+for sweepIndex = 1:numel(expectedSweeps)
+    expectedSweep = jsonStruct(expectedSweeps, sweepIndex);
+    expectedRows = expectedRows + expectedSweep.rows;
+end
 if expectedRows ~= rowCount
     error('Verification:SweepRows', '%s produced %d rows; manifest expects %d.', ...
         config.name, rowCount, expectedRows);
@@ -101,10 +105,11 @@ times = (0:(rowCount - 1))' * manifest.input.angle_increment_rad / abs(manifest.
 
 firstRow = 1;
 for sweepIndex = 1:numel(expectedSweeps)
-    lastRow = firstRow + expectedSweeps(sweepIndex).rows - 1;
+    expectedSweep = jsonStruct(expectedSweeps, sweepIndex);
+    lastRow = firstRow + expectedSweep.rows - 1;
     rows = firstRow:lastRow;
     sweepAngle = unwrap(rawAngles(rows));
-    direction = expectedSweeps(sweepIndex).direction;
+    direction = expectedSweep.direction;
     if numel(rows) > 1
         deltas = diff(sweepAngle);
         if any(direction * deltas < -1e-10)
@@ -130,6 +135,18 @@ for row = 1:rowCount
     else
         eligibility{row} = 'eligible';
     end
+end
+end
+
+function value = jsonStruct(values, index)
+% JSONDECODE returns a cell array when sibling objects do not have identical fields.
+if iscell(values)
+    value = values{index};
+else
+    value = values(index);
+end
+if ~isstruct(value)
+    error('Verification:JsonStruct', 'Expected JSON object at index %d.', index);
 end
 end
 
