@@ -102,6 +102,16 @@ def validate_scope(manifest: dict, case_root: Path) -> None:
     if manifest["case_id"] in {"watt_i", "stephenson_iii_example_2"}:
         if manifest["trust"]["dynamics"] != "newton-euler-consistency":
             raise ContractError(f"{case_root}: dynamics trust overclaims external corroboration")
+    motiongen_exclusions = manifest.get("motiongen_exclusions")
+    motiongen = manifest.get("motiongen")
+    if capabilities["motiongen"] and not isinstance(motiongen_exclusions, list):
+        raise ContractError(f"{case_root}: MotionGen cases require motiongen_exclusions")
+    if capabilities["motiongen"] and not isinstance(motiongen, dict):
+        raise ContractError(f"{case_root}: MotionGen cases require stable model metadata")
+    if not capabilities["motiongen"] and motiongen_exclusions:
+        raise ContractError(f"{case_root}: non-MotionGen case declares MotionGen exclusions")
+    if not capabilities["motiongen"] and motiongen:
+        raise ContractError(f"{case_root}: non-MotionGen case declares MotionGen model metadata")
 
 
 def validate_series(path: Path, header: tuple[str, ...], samples: list) -> None:

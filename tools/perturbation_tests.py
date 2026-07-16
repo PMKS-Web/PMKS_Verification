@@ -14,6 +14,7 @@ from typing import Callable, Iterator
 
 from check_dynamics import check_case
 from compare_oracles import compare_case
+from compare_motiongen import compare_case as compare_motiongen_case
 from reference_data import ContractError
 from validate_provenance import validate as validate_provenance
 from validate_v1 import validate_case
@@ -45,6 +46,13 @@ def main() -> None:
             perturb_provenance,
             lambda root: validate_provenance(
                 root, arguments.repo_root.resolve(), arguments.pmks_root.resolve()
+            ),
+        ),
+        (
+            "MotionGen retained-model provenance",
+            perturb_motiongen_provenance,
+            lambda root: compare_motiongen_case(
+                case(root, "teaching_four_bar"), arguments.repo_root.resolve()
             ),
         ),
     ]
@@ -152,6 +160,13 @@ def perturb_provenance(root: Path) -> None:
     metadata = json.loads(path.read_text())
     metadata["source_content_sha256"] = "0" * 64
     path.write_text(json.dumps(metadata, indent=2) + "\n")
+
+
+def perturb_motiongen_provenance(root: Path) -> None:
+    path = case(root, "teaching_four_bar") / "motiongen" / "receipts" / "joint-A.json"
+    receipt = json.loads(path.read_text())
+    receipt["model_id"] = "wrong-retained-model"
+    path.write_text(json.dumps(receipt, indent=2) + "\n")
 
 
 def mutate_csv(

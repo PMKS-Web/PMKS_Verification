@@ -38,5 +38,30 @@
   },
   "capabilities": { "joints": true, "points": true, "com": true, "links": true, "prismatic": false, "dynamics": false, "motiongen": true },
   "trust": { "kinematics": "matlab-pmks-motiongen", "com": "diagnostic-only", "dynamics": "not-applicable", "motiongen": "matlab-pmks-motiongen" },
-  "exclusions": []
+  "motiongen": {
+    "app_version": "1.1.5",
+    "model_url": "https://motiongen.io/core",
+    "model_id": "OocSpHMBTmcRQwFSJE9x",
+    "model_title": "PMKS Verification - Teaching Four-Bar - 10_31 RPM",
+    "model_access": "authenticated-account",
+    "source_units": { "time": "s", "length": "in", "angle": "rad" },
+    "actuation": {
+      "profile": "constant-array",
+      "rpm": 10.31,
+      "speed_rad_s": 1.0796606752836921,
+      "profile_samples": 3600,
+      "sample_rate_hz": 60,
+      "graph_rows": 3601
+    },
+    "coordinate_transform": {
+      "spatial_scale": 1,
+      "rotation": [[1, 0], [0, 1]],
+      "translation": [2.286, 0]
+    },
+    "tolerance": {
+      "source_numeric_guard_fraction_of_ordinate_quantization": 0.05
+    }
+  },
+  "exclusions": [],
+  "motiongen_exclusions": []
 }

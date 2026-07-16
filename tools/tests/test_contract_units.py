@@ -11,6 +11,7 @@ TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 
 from compare_baseline import compare_json  # noqa: E402
+from compare_motiongen import derivative_phase_offset, tangential_component  # noqa: E402
 from reference_data import (  # noqa: E402
     ContractError,
     Sample,
@@ -67,6 +68,18 @@ class ContractUnitTests(unittest.TestCase):
     def test_legacy_path_is_rejected(self) -> None:
         with self.assertRaises(ContractError):
             reject_legacy(Path("/tmp/legacy/reference-output"))
+
+    def test_motiongen_scalar_acceleration_is_tangential_not_vector_magnitude(self) -> None:
+        self.assertEqual(tangential_component(0, 2, -3, 0), 0)
+        self.assertIsNone(tangential_component(0, 0, 4, 0))
+
+    def test_motiongen_forward_difference_phase_offsets(self) -> None:
+        speed = 1.2
+        self.assertAlmostEqual(derivative_phase_offset("x", speed, 60), 0)
+        self.assertAlmostEqual(derivative_phase_offset("speed", speed, 60), 0.01)
+        self.assertAlmostEqual(derivative_phase_offset("acceleration", speed, 60), 0.02)
+        self.assertAlmostEqual(derivative_phase_offset("omega_rad_s", speed, 60), 0.01)
+        self.assertAlmostEqual(derivative_phase_offset("alpha_rad_s2", speed, 60), 0.02)
 
 
 if __name__ == "__main__":

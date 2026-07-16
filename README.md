@@ -79,8 +79,16 @@ definitions, runs solver-specific regression gates, and writes only v1 CSV. Scra
 
 The two canonical cases use retained signed-in MotionGen models:
 
-- Teaching four-bar: A–I and all moving links
-- Teaching slider-crank: A–C and all moving links; coincident tracer E maps to B
+- Teaching four-bar: `OocSpHMBTmcRQwFSJE9x`, A–I and all moving links, exact 10.31 RPM
+- Teaching slider-crank: `MEjogZJd5srJlJ7nmOXN`, A–C and all moving links, exact 15.1 RPM;
+  coincident tracer E maps to B
+
+Both actuators use a flat variable-velocity profile with 3,600 values, producing 3,601 graph
+rows at 60 Hz. The slider model terminates its grounded horizontal slot at fixed pivot A. Extending
+that same guide through A is kinematically equivalent, but the endpoint form prevents MotionGen's
+hidden slot-link hit target from blocking A during graph export. The exact model identity, source
+units, actuation, scale, and coordinate transform are pinned in each `case.json` and repeated in
+every receipt.
 
 Use Joint Graph (or Link Graph), select one object, open the graph overflow menu, and choose
 `Download as XLSX`. Normalize each export with `tools/motiongen/normalize_xlsx.mjs`. The tool
@@ -89,11 +97,22 @@ inventory, download time, transform, speed ratio, row count, and its own content
 the original only when `--discard-input true` is passed. Per the project decision, the XLSX is not
 committed; every receipt states that future re-normalization therefore requires a fresh export.
 
-MotionGen x/y and link angular values are directional. Its scalar joint speed/acceleration only
-corroborate magnitude; PMKS remains the independent direction check. The tolerance is transformed
-three-decimal quantization plus twice the local second-difference interpolation bound. Only named
-terminal velocity/acceleration cells observed as MotionGen null-to-zero conversions may be
-excluded.
+MotionGen x/y and link angular values are directional. Its scalar joint speed is speed magnitude;
+its scalar `Linear Accel.` is signed tangential acceleration, not vector acceleration magnitude.
+MotionGen computes the derivative columns with forward differences: velocity/omega are centered
+half a 60-Hz timestep ahead of the position timestamp, while acceleration/alpha are centered one
+timestep ahead. The comparator applies those exact input-angle offsets before comparison. PMKS
+remains the independent vector-direction check. Tangential acceleration is undefined at the two
+zero-speed slider extrema; those exact cells are declared in `motiongen_exclusions`, and their
+vector accelerations remain covered by MATLAB–PMKS comparison.
+
+The tolerance converts MotionGen's three-decimal ordinate and input-angle quantization into the
+target coordinates, propagates angle quantization with the local slope, and adds twice the local
+second-difference interpolation bound. A reviewed source-numeric guard equal to 5% of ordinate
+quantization covers the two sub-quantization pilot overages; the measurements and rationale are in
+[`reference-data/v1/MOTIONGEN_PILOT.md`](reference-data/v1/MOTIONGEN_PILOT.md). Relative link
+angles include quantization from both the current and initial rows. Only named terminal derivative
+cells observed as MotionGen null-to-zero conversions may otherwise be excluded.
 
 ## Validation commands
 

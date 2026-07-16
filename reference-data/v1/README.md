@@ -14,7 +14,8 @@ round-trip within one ULP or `1e-15 * max(1, |value|)`.
 Trust labels have deliberately narrow meanings:
 
 - `matlab-pmks`: vector kinematics agreed between the pinned MATLAB and PMKS implementations.
-- `matlab-pmks-motiongen`: the same result also has MotionGen magnitude/angle corroboration.
+- `matlab-pmks-motiongen`: the same result also has MotionGen position, scalar-derivative, and
+  angular corroboration under the source conventions recorded in the case manifest.
 - `newton-euler-consistency`: serialized MATLAB dynamics satisfy an independent equilibrium and
   power check; this is not an external dynamics oracle.
 - `diagnostic-only`: useful for investigation but prohibited from trusted consumer suites.

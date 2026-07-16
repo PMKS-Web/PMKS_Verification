@@ -34,7 +34,9 @@
     "characteristic_length": { "type": "number", "exclusiveMinimum": 0 },
     "capabilities": { "type": "object" },
     "trust": { "type": "object" },
-    "exclusions": { "type": "array" }
+    "exclusions": { "type": "array" },
+    "motiongen_exclusions": { "type": "array" },
+    "motiongen": { "type": "object" }
   },
   "additionalProperties": true
 }
