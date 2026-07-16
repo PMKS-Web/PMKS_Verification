@@ -141,7 +141,7 @@ end
 % Utility function for circle-circle intersection calculation
 function result = circleCircleIntersection(x1, y1, r1, x2, y2, r2, pointX, pointY)
 % Find intersection points
-[xIntersect, yIntersect] = circcirc(x1, y1, r1, x2, y2, r2);
+[xIntersect, yIntersect] = PosSolverUtils.circleCircleMethod(x1, y1, r1, x2, y2, r2);
 
 % Check if the intersection points are determined
 if isempty(xIntersect) || isempty(yIntersect)
