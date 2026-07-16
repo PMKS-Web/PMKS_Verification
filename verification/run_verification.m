@@ -1,5 +1,5 @@
 function summaries = run_verification(outputRoot)
-%RUN_VERIFICATION Regenerate and validate the supported verification cases.
+%RUN_VERIFICATION Regenerate and validate MATLAB source tables for v1.
 %
 % The runner copies only MATLAB source into an empty scratch directory. It
 % never reads committed Mechanism.mat files or prior CSV output.
@@ -7,7 +7,7 @@ function summaries = run_verification(outputRoot)
 verificationDirectory = fileparts(mfilename('fullpath'));
 repoRoot = fileparts(verificationDirectory);
 if nargin < 1 || isempty(outputRoot)
-    outputRoot = fullfile(repoRoot, 'artifacts', 'matlab');
+    outputRoot = fullfile(repoRoot, 'artifacts', 'candidate', 'reference-data', 'v1');
 end
 outputRoot = char(outputRoot);
 
@@ -32,26 +32,30 @@ for i = 1:numel(caseNames)
     else
         summaries(end + 1) = summary; %#ok<AGROW>
     end
-    fprintf('  PASS: %d rows, %d CSV files\n', summary.rows, summary.csvFiles);
+    fprintf('  PASS: %d rows, %d CSV files\n', summary.rows, summary.files);
 end
 
-manifest = struct();
-manifest.schemaVersion = 1;
-manifest.sourceRepository = 'https://github.com/PMKS-Web/PMKS_Verification';
-manifest.sourceCommit = gitCommit(repoRoot);
-manifest.matlabVersion = version;
-manifest.matlabRelease = version('-release');
-manifest.generatedAtUtc = char(datetime('now', 'TimeZone', 'UTC', 'Format', 'yyyy-MM-dd''T''HH:mm:ss''Z'''));
-manifest.cases = summaries;
-writeJson(fullfile(outputRoot, 'manifest.json'), manifest);
+runReport = struct();
+runReport.schemaVersion = 1;
+runReport.sourceRepository = 'https://github.com/PMKS-Web/PMKS_Verification';
+runReport.sourceCommit = gitCommit(repoRoot);
+runReport.matlabVersion = version;
+runReport.matlabRelease = version('-release');
+products = ver;
+runReport.matlabProducts = rmfield(products, {'Date'});
+runReport.generatedAtUtc = char(datetime('now', 'TimeZone', 'UTC', 'Format', 'yyyy-MM-dd''T''HH:mm:ss''Z'''));
+runReport.cases = summaries;
+writeJson(fullfile(fileparts(outputRoot), 'run-report.json'), runReport);
 
 fprintf('All %d verification cases passed.\n', numel(caseNames));
 end
 
 function summary = runOneCase(caseName, repoRoot, outputRoot)
 config = verification_case_definition(caseName, repoRoot);
-caseOutput = fullfile(outputRoot, caseName);
+caseOutput = fullfile(outputRoot, 'cases', caseName);
 mkdir(caseOutput);
+copyfile(fullfile(repoRoot, 'reference-data', 'v1', 'cases', caseName, 'case.json'), ...
+    fullfile(caseOutput, 'case.json'));
 
 scratchDirectory = tempname;
 mkdir(scratchDirectory);
@@ -78,42 +82,17 @@ if config.hasDynamics
     Mechanism = ForceSolver(Mechanism, config.scenarios);
 end
 
-summary = validate_verification_case(Mechanism, config);
-GeneralUtils.exportMatricesToCSV('Kin', 'CSVOutput');
-if config.hasDynamics
-    GeneralUtils.exportMatricesToCSV('Force', 'CSVOutput');
-end
-
-csvSource = fullfile(scratchDirectory, 'CSVOutput');
-if ~isfolder(csvSource)
-    error('Verification:MissingCsvOutput', '%s did not create CSV output.', caseName);
-end
-copyfile(csvSource, fullfile(caseOutput, 'CSVOutput'));
-save(fullfile(caseOutput, 'Mechanism.mat'), 'Mechanism', '-v7');
-
-summary.csvFiles = validateCsvTree(fullfile(caseOutput, 'CSVOutput'), summary.rows, caseName);
+metrics = validate_verification_case(Mechanism, config);
+exported = export_reference_v1(Mechanism, config, caseOutput, repoRoot);
+summary = exported;
+summary.speedRpm = config.speedRpm;
+summary.hasDynamics = config.hasDynamics;
+summary.maxLengthDrift = metrics.maxLengthDrift;
+summary.maxVelocityConstraintResidual = metrics.maxVelocityConstraintResidual;
+summary.maxAccelerationConstraintResidual = metrics.maxAccelerationConstraintResidual;
 summary.dynamicsScope = dynamicsScope(config);
 
 clear cleanup;
-end
-
-function count = validateCsvTree(csvRoot, rowCount, caseName)
-files = dir(fullfile(csvRoot, '**', '*.csv'));
-if isempty(files)
-    error('Verification:NoCsvFiles', '%s produced no CSV files.', caseName);
-end
-
-for i = 1:numel(files)
-    filePath = fullfile(files(i).folder, files(i).name);
-    data = readmatrix(filePath);
-    if ~isnumeric(data) || ~isequal(size(data), [rowCount, 3])
-        error('Verification:CsvShape', '%s must contain %d rows and 3 columns.', filePath, rowCount);
-    end
-    if any(~isfinite(data(:)))
-        error('Verification:CsvNonFinite', '%s contains non-finite values.', filePath);
-    end
-end
-count = numel(files);
 end
 
 function value = dynamicsScope(config)

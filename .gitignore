@@ -1,2 +1,8 @@
 artifacts/
 *.asv
+.external/
+**/bin/
+**/obj/
+node_modules/
+Mechanisms/**/CSVOutput/
+Mechanisms/**/Mechanism.mat

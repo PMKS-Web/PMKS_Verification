@@ -1,0 +1,53 @@
+from __future__ import annotations
+
+import csv
+import math
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+TOOLS = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(TOOLS))
+
+from reference_data import (  # noqa: E402
+    ContractError,
+    Sample,
+    circular_difference,
+    reject_legacy,
+    signed_area,
+    validate_float_token,
+    validate_sweep_order,
+)
+
+
+class ContractUnitTests(unittest.TestCase):
+    def test_csv_precision_rejects_coarsely_rounded_value(self) -> None:
+        with self.assertRaises(ContractError):
+            validate_float_token("3.14159", Path("value.csv"), 2, "x")
+
+    def test_duplicate_or_restarted_sweep_is_rejected(self) -> None:
+        samples = [
+            Sample("a", "s0", 0, 0, 1, 0, 1, "eligible"),
+            Sample("b", "s1", 0, 1, 1, 1, 1, "eligible"),
+            Sample("c", "s0", 1, 2, 1, 2, 1, "eligible"),
+        ]
+        with self.assertRaises(ContractError):
+            validate_sweep_order(samples, Path("samples.csv"))
+
+    def test_wrong_assembly_branch_changes_signed_area(self) -> None:
+        expected = signed_area([(0, 0), (1, 0), (1, 1), (0, 1)])
+        wrong = signed_area([(0, 0), (0, 1), (1, 1), (1, 0)])
+        self.assertGreater(expected, 0)
+        self.assertLess(wrong, 0)
+
+    def test_cycle_endpoint_angle_is_compared_modulo_two_pi(self) -> None:
+        self.assertLess(circular_difference(0, 2 * math.pi), 1e-14)
+
+    def test_legacy_path_is_rejected(self) -> None:
+        with self.assertRaises(ContractError):
+            reject_legacy(Path("/tmp/legacy/reference-output"))
+
+
+if __name__ == "__main__":
+    unittest.main()

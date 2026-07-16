@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/PMKS-Web/PMKS_Verification/reference-data/v1/schema/case.schema.json",
+  "title": "PMKS verification case v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "case_id",
+    "topology",
+    "input",
+    "units",
+    "characteristic_length",
+    "jacobian",
+    "capabilities",
+    "trust"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "case_id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "topology": {
+      "type": "object",
+      "required": ["joints", "points", "links", "independent_loops"],
+      "properties": {
+        "joints": { "type": "array", "minItems": 3 },
+        "points": { "type": "array" },
+        "links": { "type": "array", "minItems": 2 },
+        "independent_loops": { "type": "array", "minItems": 1 }
+      }
+    },
+    "input": {
+      "type": "object",
+      "required": ["joint", "link", "rpm", "speed_rad_s", "angle_increment_rad", "expected_sweeps"]
+    },
+    "characteristic_length": { "type": "number", "exclusiveMinimum": 0 },
+    "capabilities": { "type": "object" },
+    "trust": { "type": "object" },
+    "exclusions": { "type": "array" }
+  },
+  "additionalProperties": true
+}

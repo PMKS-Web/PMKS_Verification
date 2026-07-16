@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "case_id": "teaching_four_bar",
+  "title": "Teaching four-bar",
+  "units": { "length": "m", "time": "s", "angle": "rad", "mass": "kg", "force": "N" },
+  "characteristic_length": 4.06435000953412,
+  "topology": {
+    "joints": [
+      { "id": "A", "type": "R", "links": ["ground", "ABH"], "initial": [0, 0] },
+      { "id": "B", "type": "R", "links": ["ABH", "BCFG"], "initial": [1.52, 0] },
+      { "id": "C", "type": "R", "links": ["BCFG", "CDEI"], "initial": [4.23, 3.029] },
+      { "id": "D", "type": "R", "links": ["CDEI", "ground"], "initial": [4.572, 0] }
+    ],
+    "points": [
+      { "id": "E", "link": "CDEI", "initial": [4.79, 1.632] },
+      { "id": "F", "link": "BCFG", "initial": [2.548, 1.958] },
+      { "id": "G", "link": "BCFG", "initial": [2.053, 3.543] },
+      { "id": "H", "link": "ABH", "initial": [0.7598, 1.0278] },
+      { "id": "I", "link": "CDEI", "initial": [4.1798, 1.952] }
+    ],
+    "links": [
+      { "id": "ABH", "joints": ["A", "B"], "angle_basis": ["A", "B"] },
+      { "id": "BCFG", "joints": ["B", "C"], "angle_basis": ["B", "C"] },
+      { "id": "CDEI", "joints": ["C", "D"], "angle_basis": ["D", "C"] }
+    ],
+    "independent_loops": [["A", "B", "C", "D"]]
+  },
+  "input": {
+    "joint": "A", "link": "ABH", "rpm": 10.31, "speed_rad_s": 1.0796606752836921,
+    "angle_increment_rad": 0.017453292519943295,
+    "expected_sweeps": [{ "direction": 1, "rows": 360 }, { "direction": 1, "rows": 1, "cycle_endpoint": true }]
+  },
+  "jacobian": { "unknown_joints": ["C"], "length_constraints": [["B", "C"], ["C", "D"]], "guide_constraints": [], "singular_condition_threshold": 10000000000 },
+  "mass_properties": {
+    "ABH": { "mass": 10.458382, "inertia": 52777966.276354, "com_initial": [-6.38, 2.39] },
+    "BCFG": { "mass": 0.626202, "inertia": 10871793.503827, "com_initial": [185.73, 209.1] },
+    "CDEI": { "mass": 4.901229, "inertia": 63343618.03601, "com_initial": [472.56, -20.8] }
+  },
+  "capabilities": { "joints": true, "points": true, "com": true, "links": true, "prismatic": false, "dynamics": false, "motiongen": true },
+  "trust": { "kinematics": "matlab-pmks-motiongen", "com": "diagnostic-only", "dynamics": "not-applicable", "motiongen": "matlab-pmks-motiongen" },
+  "exclusions": []
+}

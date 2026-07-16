@@ -11,7 +11,7 @@ switch caseName
     case 'watt_i'
         config.sourceDirectory = fullfile(repoRoot, 'Mechanisms', 'Watt_I');
         config.speedRpm = 10;
-        config.inputSpeed = 1.0472;
+        config.inputSpeed = config.speedRpm * pi / 30;
         config.hasDynamics = true;
         config.scenarios = [1 0 0; 1 1 0];
         config.constraints = {
@@ -33,7 +33,7 @@ switch caseName
     case 'stephenson_iii_example_2'
         config.sourceDirectory = fullfile(repoRoot, 'Mechanisms', 'Stephenson_III', 'Example_2');
         config.speedRpm = 10;
-        config.inputSpeed = 1.0472;
+        config.inputSpeed = config.speedRpm * pi / 30;
         config.hasDynamics = true;
         config.scenarios = [1 0 0; 1 1 0];
         config.constraints = {
@@ -87,7 +87,7 @@ switch caseName
     case 'slider_crank_tracer'
         config.sourceDirectory = fullfile(repoRoot, 'Mechanisms', 'Four_Bar_Slider', 'Slider_Crank_Tracer_Point');
         config.speedRpm = 10;
-        config.inputSpeed = 1.0472;
+        config.inputSpeed = config.speedRpm * pi / 30;
         config.constraints = {
             'A', 'B';
             'B', 'C';
