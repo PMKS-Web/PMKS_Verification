@@ -23,11 +23,12 @@ caseNames = {
     'teaching_slider_crank', ...
     'slider_crank_tracer'};
 
-summaries = repmat(struct(), 1, numel(caseNames));
+summaries = struct([]);
 for i = 1:numel(caseNames)
     fprintf('Running %s...\n', caseNames{i});
-    summaries(i) = runOneCase(caseNames{i}, repoRoot, outputRoot);
-    fprintf('  PASS: %d rows, %d CSV files\n', summaries(i).rows, summaries(i).csvFiles);
+    summary = runOneCase(caseNames{i}, repoRoot, outputRoot);
+    summaries(end + 1) = summary; %#ok<AGROW>
+    fprintf('  PASS: %d rows, %d CSV files\n', summary.rows, summary.csvFiles);
 end
 
 manifest = struct();
