@@ -142,7 +142,9 @@ def perturb_torque(root: Path) -> None:
 
 def perturb_precision(root: Path) -> None:
     path = case(root, "teaching_four_bar") / "pmks" / "joints" / "B.csv"
-    mutate_csv(path, 10, "x", lambda value: format(float(value), ".6g"), preserve_string=True)
+    # This decimal is intentionally not the canonical round-trip spelling of its
+    # binary64 value, so the serialization gate—not cross-source error—must catch it.
+    mutate_csv(path, 10, "x", lambda value: "3.14159", preserve_string=True)
 
 
 def perturb_provenance(root: Path) -> None:

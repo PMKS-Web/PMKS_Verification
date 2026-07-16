@@ -234,23 +234,42 @@ jobs:
         run: python3 tools/validate_v1.py --root artifacts/combined/reference-data/v1 --require-sources
 
       - name: Compare MATLAB with PMKS
+        id: oracle_comparison
+        continue-on-error: true
         run: python3 tools/compare_oracles.py --root artifacts/combined/reference-data/v1
 
       - name: Check independent Newton-Euler equilibrium and power
+        id: dynamics_check
+        continue-on-error: true
         run: python3 tools/check_dynamics.py --root artifacts/combined/reference-data/v1
 
       - name: Compare committed MotionGen fixtures
+        id: motiongen_comparison
+        continue-on-error: true
         run: python3 tools/compare_motiongen.py --root artifacts/combined/reference-data/v1 --repo-root .
 
       - name: Run candidate perturbation tests
+        id: perturbation_tests
+        continue-on-error: true
         run: python3 tools/perturbation_tests.py --root artifacts/combined/reference-data/v1 --repo-root . --pmks-root .external/PMKS
 
       - name: Compare with committed baseline
+        id: baseline_comparison
+        continue-on-error: true
         run: >-
           python3 tools/compare_baseline.py
           --baseline reference-data/v1
           --candidate artifacts/combined/reference-data/v1
           --allow-missing
+
+      - name: Require every promotion gate
+        shell: bash
+        run: |
+          test "${{ steps.oracle_comparison.outcome }}" = success
+          test "${{ steps.dynamics_check.outcome }}" = success
+          test "${{ steps.motiongen_comparison.outcome }}" = success
+          test "${{ steps.perturbation_tests.outcome }}" = success
+          test "${{ steps.baseline_comparison.outcome }}" = success
 
       - name: Record volatile run identity and checksums
         shell: bash

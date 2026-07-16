@@ -1,5 +1,9 @@
 # Reference data v1
 
+Promotion is currently blocked by the pinned PMKS acceleration incompatibility documented in
+[FEASIBILITY.md](FEASIBILITY.md). The contract and generators remain candidate infrastructure;
+there is no trusted v1 baseline yet.
+
 This directory is the only supported machine-readable reference-data contract. Consumers must
 reject `legacy/reference-output` and the historical `Mechanisms/**/CSVOutput` layouts.
 
