@@ -141,8 +141,7 @@ matrix = zeros(size(lengthConstraints, 1) + numel(guideConstraints), 2 * numel(u
 characteristicLength = manifest.characteristic_length;
 
 for constraintIndex = 1:size(lengthConstraints, 1)
-    firstId = lengthConstraints{constraintIndex, 1};
-    secondId = lengthConstraints{constraintIndex, 2};
+    [firstId, secondId] = jsonPair(lengthConstraints, constraintIndex);
     firstAll = namedPosition(Mechanism, firstId);
     secondAll = namedPosition(Mechanism, secondId);
     delta = firstAll(row, 1:2) - secondAll(row, 1:2);
@@ -177,6 +176,22 @@ else
     value = singularValues(1) / singularValues(end);
     if ~isfinite(value), value = 1e300; end
 end
+end
+
+function [firstValue, secondValue] = jsonPair(values, index)
+% JSONDECODE represents an array of string pairs as a column of cell arrays.
+% Also accept an N-by-2 cell array for compatibility with older MATLAB releases.
+if size(values, 2) >= 2
+    firstValue = values{index, 1};
+    secondValue = values{index, 2};
+    return;
+end
+pair = values{index};
+if ~iscell(pair) || numel(pair) ~= 2
+    error('Verification:JsonPair', 'Expected JSON string pair at index %d.', index);
+end
+firstValue = pair{1};
+secondValue = pair{2};
 end
 
 function exportDynamics(Mechanism, config, matlabRoot, sampleIds)

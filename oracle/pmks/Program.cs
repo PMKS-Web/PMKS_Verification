@@ -97,7 +97,8 @@ static void AssertRepeatable(string caseId, RunResult first, RunResult second)
                 Math.Abs(Math.BitIncrement(right[value]) - right[value]));
             if (Math.Abs(left[value] - right[value]) > 8 * ulp + 1e-12 * scale)
                 throw new InvalidOperationException(
-                    $"{caseId}: canonical PMKS output is not repeatable at row {row}, value {value}.");
+                    $"{caseId}: canonical PMKS output is not repeatable at row {row}, value {value}: " +
+                    $"{left[value]:G17} versus {right[value]:G17}.");
         }
     }
 }
