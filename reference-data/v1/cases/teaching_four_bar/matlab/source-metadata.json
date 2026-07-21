@@ -1,0 +1,28 @@
+{
+  "numeric_format": "%.17g",
+  "schema_version": 1,
+  "source_content_sha256": "1a9c3702a33c7bc48d4e0911f0628e719133c95fecfb075e3458d8a8c6867372",
+  "source_files": [
+    "CommonUtils/ForceSolverUtils.m",
+    "CommonUtils/GeneralUtils.m",
+    "CommonUtils/PosSolverUtils.m",
+    "CommonUtils/RMSEUtils.m",
+    "CommonUtils/SpeedDetermination.m",
+    "CommonUtils/StressSolverUtils.m",
+    "CommonUtils/VelAccSolverUtils.m",
+    "Mechanisms/Four_Bar_Mechanism/TeachingLab_Four_Bar/ForceSolver.m",
+    "Mechanisms/Four_Bar_Mechanism/TeachingLab_Four_Bar/Plots.m",
+    "Mechanisms/Four_Bar_Mechanism/TeachingLab_Four_Bar/PosSolver.m",
+    "Mechanisms/Four_Bar_Mechanism/TeachingLab_Four_Bar/RMSE.m",
+    "Mechanisms/Four_Bar_Mechanism/TeachingLab_Four_Bar/StressSolver.m",
+    "Mechanisms/Four_Bar_Mechanism/TeachingLab_Four_Bar/Utils.m",
+    "Mechanisms/Four_Bar_Mechanism/TeachingLab_Four_Bar/VelAccSolver.m",
+    "Mechanisms/Four_Bar_Mechanism/TeachingLab_Four_Bar/main.m",
+    "verification/build_verification_case.m",
+    "verification/export_reference_v1.m",
+    "verification/run_verification.m",
+    "verification/validate_verification_case.m",
+    "verification/verification_case_definition.m"
+  ],
+  "source_repository": "https://github.com/PMKS-Web/PMKS_Verification"
+}

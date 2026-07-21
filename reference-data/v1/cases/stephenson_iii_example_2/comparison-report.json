@@ -1,0 +1,18 @@
+{
+  "aligned_rows": 201,
+  "case_id": "stephenson_iii_example_2",
+  "compared_values": 17487,
+  "excluded_alignment_rows": 0,
+  "matlab_rows": 201,
+  "max_scaled_error": 1.6977742403699834e-06,
+  "max_scaled_error_detail": "matlab_0041:links:EF:omega_rad_s",
+  "schema_version": 1,
+  "status": "pass",
+  "trust": {
+    "com": "matlab-pmks-fork",
+    "dynamics": "newton-euler-consistency",
+    "kinematics": "matlab-pmks-fork",
+    "motiongen": "not-applicable"
+  },
+  "used_exclusions": []
+}

@@ -1,0 +1,18 @@
+{
+  "aligned_rows": 361,
+  "case_id": "teaching_four_bar",
+  "compared_values": 22743,
+  "excluded_alignment_rows": 0,
+  "matlab_rows": 361,
+  "max_scaled_error": 1.7364133195803608e-05,
+  "max_scaled_error_detail": "matlab_0360:joints:B:y",
+  "schema_version": 1,
+  "status": "pass",
+  "trust": {
+    "com": "diagnostic-only",
+    "dynamics": "not-applicable",
+    "kinematics": "matlab-pmks-fork-motiongen",
+    "motiongen": "matlab-pmks-fork-motiongen"
+  },
+  "used_exclusions": []
+}

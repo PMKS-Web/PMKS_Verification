@@ -1,0 +1,27 @@
+{
+  "adapter_content_sha256": "3e8a5815ae7111e625b2ccee59e425c606791d3ffdd0a224dbf8384b55f9a503",
+  "adaptive_smoothing": false,
+  "angle_increment_rad": 0.017453292519943295,
+  "canonicalization": "Group by exact one-degree input tick, collapse race-sensitive endpoint duplicates, normalize link angles for repeatability checks.",
+  "fork_changed_files": [
+    "PlanarMechanismSimulator/VelocityAndAcceleration/VelocityAndAccelerationSolver.cs"
+  ],
+  "fork_patch_sha256": "2efa0c156bd8acaa83f104738c841046eb46e1a19e8414044c1992753fbe2c6b",
+  "repeatability_relative_tolerance": 8e-12,
+  "runs": {
+    "negative": {
+      "canonical_rows": 11
+    },
+    "positive": {
+      "canonical_rows": 11
+    }
+  },
+  "schema_version": 1,
+  "source_commit": "644b26c75b07182ce04dc6466cfec74ee4130c93",
+  "source_content_sha256": "b11a84f6a4cc1d2bc5cf17a2849d498c9a130b93e5f697970da4f73923b00c51",
+  "source_repository": "https://github.com/PMKS-Web/PMKS",
+  "source_tree_git": "331d0e4cdfbe9f728ad65183f365552d0ba78b73",
+  "upstream_base_commit": "2a0a6fca957dd19844567702af663f607dc15dfe",
+  "upstream_base_tree_git": "cd6b654909094e05b0938f863c3b6f3d1ae166a6",
+  "upstream_repository": "https://github.com/DesignEngrLab/PMKS"
+}
