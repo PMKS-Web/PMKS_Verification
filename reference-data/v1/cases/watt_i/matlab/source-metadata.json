@@ -1,0 +1,28 @@
+{
+  "numeric_format": "%.17g",
+  "schema_version": 1,
+  "source_content_sha256": "e3294c11a1e49f188fd09d09c95cbfb50c6839e71120d3e8e95ab9d4e01b155c",
+  "source_files": [
+    "CommonUtils/ForceSolverUtils.m",
+    "CommonUtils/GeneralUtils.m",
+    "CommonUtils/PosSolverUtils.m",
+    "CommonUtils/RMSEUtils.m",
+    "CommonUtils/SpeedDetermination.m",
+    "CommonUtils/StressSolverUtils.m",
+    "CommonUtils/VelAccSolverUtils.m",
+    "Mechanisms/Watt_I/ForceSolver.m",
+    "Mechanisms/Watt_I/Initializer.m",
+    "Mechanisms/Watt_I/Plots.m",
+    "Mechanisms/Watt_I/PosSolver.m",
+    "Mechanisms/Watt_I/RMSE.m",
+    "Mechanisms/Watt_I/StressSolver.m",
+    "Mechanisms/Watt_I/Utils.m",
+    "Mechanisms/Watt_I/VelAccSolver.m",
+    "verification/build_verification_case.m",
+    "verification/export_reference_v1.m",
+    "verification/run_verification.m",
+    "verification/validate_verification_case.m",
+    "verification/verification_case_definition.m"
+  ],
+  "source_repository": "https://github.com/PMKS-Web/PMKS_Verification"
+}
