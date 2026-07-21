@@ -17,6 +17,10 @@ is paired one-to-one with the MATLAB-aligned positive branch at the same input a
 acceleration must agree, velocity must reverse sign, link angles are compared circularly, and the
 same checks cover joints, tracer points, CoMs, links, and prismatic state. The comparison report
 records direct, symmetry-covered, and unverified PMKS row counts; unverified rows must be zero.
+The speed-symmetry tolerance ratio is evaluated as a gate but is not serialized as a baseline
+metric: algebraically equivalent PMKS elimination orders can move a tiny near-machine-precision
+difference enough to make that ratio a noisy diagnostic even while the raw tables remain within
+their stricter same-source regeneration bound.
 
 Trust labels have deliberately narrow meanings:
 
