@@ -12,7 +12,8 @@
     "characteristic_length",
     "jacobian",
     "capabilities",
-    "trust"
+    "trust",
+    "exclusions"
   ],
   "properties": {
     "schema_version": { "const": 1 },

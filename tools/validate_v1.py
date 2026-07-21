@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import math
+import re
 from pathlib import Path
 
 from reference_data import (
@@ -25,6 +27,8 @@ from reference_data import (
 
 def validate_case(case_root: Path, require_sources: bool) -> None:
     manifest = load_json(case_root / "case.json")
+    schema_path = case_root.parent.parent / "schema" / "case.schema.json"
+    validate_json_schema(manifest, load_json(schema_path), "case")
     case_id = manifest.get("case_id")
     if case_id != case_root.name or manifest.get("schema_version") != 1:
         raise ContractError(f"{case_root}: case identity/schema mismatch")
@@ -117,6 +121,75 @@ def validate_scope(manifest: dict, case_root: Path) -> None:
 def validate_series(path: Path, header: tuple[str, ...], samples: list) -> None:
     rows = rows_by_id(path, header)
     require_sample_coverage(path, rows, samples)
+
+
+def validate_json_schema(value: object, schema: dict, location: str) -> None:
+    """Enforce the dependency-free subset used by case.schema.json."""
+    supported = {
+        "$schema",
+        "$id",
+        "title",
+        "type",
+        "required",
+        "properties",
+        "const",
+        "pattern",
+        "exclusiveMinimum",
+        "minItems",
+        "items",
+        "additionalProperties",
+    }
+    unsupported = sorted(set(schema) - supported)
+    if unsupported:
+        raise ContractError(
+            f"{location}: case.schema.json uses unsupported keywords {unsupported}"
+        )
+    expected_type = schema.get("type")
+    type_checks = {
+        "object": lambda item: isinstance(item, dict),
+        "array": lambda item: isinstance(item, list),
+        "string": lambda item: isinstance(item, str),
+        "number": lambda item: (
+            isinstance(item, (int, float))
+            and not isinstance(item, bool)
+            and math.isfinite(item)
+        ),
+    }
+    if expected_type and (
+        expected_type not in type_checks or not type_checks[expected_type](value)
+    ):
+        raise ContractError(f"{location}: expected JSON Schema type {expected_type}")
+    if "const" in schema and value != schema["const"]:
+        raise ContractError(f"{location}: expected constant {schema['const']!r}")
+    if "pattern" in schema and (
+        not isinstance(value, str) or re.fullmatch(schema["pattern"], value) is None
+    ):
+        raise ContractError(f"{location}: value {value!r} does not match {schema['pattern']!r}")
+    if "exclusiveMinimum" in schema and (
+        not isinstance(value, (int, float)) or value <= schema["exclusiveMinimum"]
+    ):
+        raise ContractError(
+            f"{location}: value must be greater than {schema['exclusiveMinimum']}"
+        )
+    if isinstance(value, list):
+        if len(value) < int(schema.get("minItems", 0)):
+            raise ContractError(f"{location}: array has fewer than {schema['minItems']} items")
+        item_schema = schema.get("items")
+        if item_schema:
+            for index, item in enumerate(value):
+                validate_json_schema(item, item_schema, f"{location}[{index}]")
+    if isinstance(value, dict):
+        missing = sorted(set(schema.get("required", [])) - value.keys())
+        if missing:
+            raise ContractError(f"{location}: JSON Schema required fields missing: {missing}")
+        properties = schema.get("properties", {})
+        for key, child_schema in properties.items():
+            if key in value:
+                validate_json_schema(value[key], child_schema, f"{location}.{key}")
+        if schema.get("additionalProperties") is False:
+            extra = sorted(set(value) - properties.keys())
+            if extra:
+                raise ContractError(f"{location}: unexpected fields: {extra}")
 
 
 def main() -> None:

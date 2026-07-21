@@ -95,7 +95,11 @@ units, actuation, scale, and coordinate transform are pinned in each `case.json`
 every receipt.
 
 Use Joint Graph (or Link Graph), select one object, open the graph overflow menu, and choose
-`Download as XLSX`. Normalize each export with `tools/motiongen/normalize_xlsx.mjs`. The tool
+`Download as XLSX`. The committed exports were normalized with
+`tools/motiongen/normalize_xlsx.mjs`. That provenance-locked script depends on the non-public
+`@oai/artifact-tool` runtime and is not executable from a clean public clone; it must not be used
+for new exports. A future refresh requires a fresh retained-model export and a replacement based
+on a public, locked XLSX parser, as detailed in `tools/motiongen/README.md`. The historical tool
 records the model URL/ID, units, graph identity, original filename and SHA-256, sheet/header
 inventory, download time, transform, speed ratio, row count, and its own content hash. It deletes
 the original only when `--discard-input true` is passed. Per the project decision, the XLSX is not
@@ -136,8 +140,9 @@ python3 tools/perturbation_tests.py --root artifacts/candidate/reference-data/v1
 ```
 
 The perturbation suite proves independent detection of wrong assembly branch, velocity sign,
-tracer acceleration, slider-axis drift, truncated/restarted sweeps, duplicate mishandling,
-missing files, force ownership, load point, gravity, torque, CSV precision, and stale provenance.
+an altered otherwise-unaligned negative-speed PMKS branch, tracer acceleration, slider-axis drift,
+truncated/restarted sweeps, duplicate mishandling, missing files, force ownership, load point,
+gravity, torque, CSV precision, and stale provenance.
 
 ## Promotion
 

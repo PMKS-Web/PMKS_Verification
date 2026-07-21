@@ -38,6 +38,15 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Check out declared DesignEngrLab upstream base
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          repository: DesignEngrLab/PMKS
+          ref: 2a0a6fca957dd19844567702af663f607dc15dfe
+          path: .external/PMKS-upstream
+          fetch-depth: 1
+          persist-credentials: false
+
       - name: Set up exact .NET 8 SDK
         uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
@@ -48,7 +57,9 @@ jobs:
         run: |
           test "$(git -C .external/PMKS rev-parse HEAD)" = "$PMKS_COMMIT"
           git -C .external/PMKS merge-base --is-ancestor "$PMKS_COMMIT" refs/remotes/origin/master
-          python3 tools/validate_pmks_fork.py --pmks-root .external/PMKS
+          python3 tools/validate_pmks_fork.py \
+            --pmks-root .external/PMKS \
+            --upstream-root .external/PMKS-upstream
           git -C .external/PMKS diff --exit-code
 
       - name: Validate manifests and contract unit tests
@@ -92,8 +103,14 @@ jobs:
       - name: Reject legacy output and tracked mutations
         shell: bash
         run: |
-          ! find artifacts/candidate -type d -name CSVOutput | grep -q .
-          ! find artifacts/candidate -type f -name Mechanism.mat | grep -q .
+          if find artifacts/candidate -type d -name CSVOutput -print -quit | grep -q .; then
+            echo "::error::MATLAB candidate contains a legacy CSVOutput directory"
+            exit 1
+          fi
+          if find artifacts/candidate -type f -name Mechanism.mat -print -quit | grep -q .; then
+            echo "::error::MATLAB candidate contains a scratch Mechanism.mat file"
+            exit 1
+          fi
           git diff --exit-code
 
       - name: Upload MATLAB candidate
@@ -289,12 +306,22 @@ jobs:
           find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
 
       - name: Upload trusted candidate
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: trusted-reference-data-v1-${{ github.sha }}
           path: artifacts/combined
           if-no-files-found: error
           retention-days: 90
+
+      - name: Upload verified pull-request candidate
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: verified-pr-reference-data-v1-${{ github.sha }}
+          path: artifacts/combined
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Upload failed diagnostic candidate
         if: failure()

@@ -25,7 +25,11 @@ def git_output(root: Path, *arguments: str) -> str:
     ).strip()
 
 
-def validate(pmks_root: Path, allowlist_path: Path) -> dict:
+def validate(
+    pmks_root: Path,
+    allowlist_path: Path,
+    upstream_root: Path | None = None,
+) -> dict:
     allowlist = load_json(allowlist_path)
     expected_identity = {
         "repository": PMKS_REPOSITORY,
@@ -56,6 +60,23 @@ def validate(pmks_root: Path, allowlist_path: Path) -> dict:
     )
     if ancestor.returncode != 0:
         raise ContractError("Pinned PMKS fork does not descend from the declared upstream base")
+
+    if upstream_root is not None:
+        upstream_head = git_output(upstream_root, "rev-parse", "HEAD")
+        if upstream_head != PMKS_UPSTREAM_COMMIT:
+            raise ContractError(
+                f"DesignEngrLab upstream checkout is {upstream_head}, "
+                f"expected {PMKS_UPSTREAM_COMMIT}"
+            )
+        upstream_tree = git_tree(upstream_root, "HEAD")
+        declared_tree = allowlist.get("upstream_base_tree_git")
+        fork_base_tree = git_tree(pmks_root, PMKS_UPSTREAM_COMMIT)
+        if upstream_tree != declared_tree or upstream_tree != fork_base_tree:
+            raise ContractError(
+                "Declared fork base does not match the independently checked out "
+                f"DesignEngrLab commit: upstream={upstream_tree}, "
+                f"fork_base={fork_base_tree}, declared={declared_tree}"
+            )
 
     changed = git_changed_files(pmks_root, PMKS_UPSTREAM_COMMIT)
     allowed = allowlist.get("allowed_paths", [])
@@ -96,13 +117,18 @@ def validate(pmks_root: Path, allowlist_path: Path) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--pmks-root", type=Path, required=True)
+    parser.add_argument("--upstream-root", type=Path)
     parser.add_argument(
         "--allowlist",
         type=Path,
         default=Path("reference-data/v1/pmks-fork-delta.json"),
     )
     arguments = parser.parse_args()
-    validate(arguments.pmks_root.resolve(), arguments.allowlist.resolve())
+    validate(
+        arguments.pmks_root.resolve(),
+        arguments.allowlist.resolve(),
+        arguments.upstream_root.resolve() if arguments.upstream_root else None,
+    )
     print("PASS PMKS fork identity and delta")
 
 

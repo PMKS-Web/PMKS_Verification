@@ -13,6 +13,7 @@ from reference_data import (
     ContractError,
     LINK_HEADER,
     POINT_HEADER,
+    PRISMATIC_HEADER,
     Sample,
     case_directories,
     circular_difference,
@@ -69,6 +70,46 @@ class Comparison:
             )
 
 
+class SpeedSymmetryComparison:
+    """Check PMKS +/- speed symmetry using the documented same-source tier."""
+
+    RELATIVE_TOLERANCE = 8e-12
+
+    def __init__(self, case_id: str) -> None:
+        self.case_id = case_id
+        self.compared_values = 0
+        self.max_scaled_error = 0.0
+        self.max_detail = ""
+
+    def value(
+        self,
+        actual: float,
+        expected: float,
+        detail: str,
+        circular: bool = False,
+    ) -> None:
+        if not math.isfinite(actual) or not math.isfinite(expected):
+            raise ContractError(f"{self.case_id}: nonfinite PMKS speed-symmetry value at {detail}")
+        difference = (
+            circular_difference(actual, expected) if circular else abs(actual - expected)
+        )
+        scale = max(1.0, abs(actual), abs(expected))
+        limit = (
+            8 * max(math.ulp(actual), math.ulp(expected))
+            + self.RELATIVE_TOLERANCE * scale
+        )
+        error = difference / limit
+        self.compared_values += 1
+        if error > self.max_scaled_error:
+            self.max_scaled_error = error
+            self.max_detail = detail
+        if error > 1:
+            raise ContractError(
+                f"{self.case_id}: PMKS speed-symmetry disagreement at {detail}; "
+                f"actual={actual:.17g}, expected={expected:.17g}, scaled_error={error:.6g}"
+            )
+
+
 def compare_case(case_root: Path) -> dict:
     manifest = load_json(case_root / "case.json")
     matlab_samples = read_samples(case_root / "matlab" / "samples.csv")
@@ -86,6 +127,9 @@ def compare_case(case_root: Path) -> dict:
     validate_slider_axis(case_root, manifest, "pmks", pmks_samples, compare)
     compare_point_sources(case_root, manifest, alignments, compare)
     compare_link_sources(case_root, manifest, alignments, compare)
+    symmetry = verify_pmks_row_coverage(
+        case_root, manifest, pmks_samples, alignments
+    )
     verify_exclusion_accounting(manifest, compare)
 
     write_csv(
@@ -125,6 +169,15 @@ def compare_case(case_root: Path) -> dict:
         "matlab_rows": len(matlab_samples),
         "aligned_rows": sum(alignment.pmks is not None for alignment in alignments),
         "excluded_alignment_rows": sum(alignment.pmks is None for alignment in alignments),
+        "pmks_rows": len(pmks_samples),
+        "pmks_matlab_aligned_unique_rows": len(
+            {alignment.pmks.sample_id for alignment in alignments if alignment.pmks is not None}
+        ),
+        "pmks_speed_symmetry_rows": symmetry["rows"],
+        "pmks_unverified_rows": symmetry["unverified_rows"],
+        "pmks_speed_symmetry_compared_values": symmetry["comparison"].compared_values,
+        "pmks_speed_symmetry_max_scaled_error": symmetry["comparison"].max_scaled_error,
+        "pmks_speed_symmetry_max_scaled_error_detail": symmetry["comparison"].max_detail,
         "compared_values": compare.compared_values,
         "max_scaled_error": compare.max_scaled_error,
         "max_scaled_error_detail": compare.max_detail,
@@ -133,6 +186,160 @@ def compare_case(case_root: Path) -> dict:
     }
     dump_json(case_root / "comparison-report.json", report)
     return report
+
+
+def verify_pmks_row_coverage(
+    case_root: Path,
+    manifest: dict,
+    pmks_samples: list[Sample],
+    alignments: list[Alignment],
+) -> dict:
+    """Corroborate PMKS rows not directly consumed by MATLAB through speed symmetry."""
+    aligned_ids = {
+        alignment.pmks.sample_id for alignment in alignments if alignment.pmks is not None
+    }
+    aligned_samples = [sample for sample in pmks_samples if sample.sample_id in aligned_ids]
+    unaligned_samples = [sample for sample in pmks_samples if sample.sample_id not in aligned_ids]
+    comparison = SpeedSymmetryComparison(manifest["case_id"])
+    counterparts: dict[str, Sample] = {}
+    used_counterparts: set[str] = set()
+    for sample in unaligned_samples:
+        candidates = [
+            candidate
+            for candidate in aligned_samples
+            if candidate.direction == -sample.direction
+            and circular_difference(candidate.input_angle, sample.input_angle) <= 1e-10
+        ]
+        if len(candidates) != 1:
+            raise ContractError(
+                f"{manifest['case_id']}: PMKS row {sample.sample_id} has {len(candidates)} "
+                "aligned opposite-speed counterparts; expected exactly one"
+            )
+        counterpart = candidates[0]
+        if counterpart.sample_id in used_counterparts:
+            raise ContractError(
+                f"{manifest['case_id']}: PMKS symmetry counterpart "
+                f"{counterpart.sample_id} is reused"
+            )
+        used_counterparts.add(counterpart.sample_id)
+        counterparts[sample.sample_id] = counterpart
+        if sample.eligibility != counterpart.eligibility:
+            raise ContractError(
+                f"{manifest['case_id']}: PMKS eligibility changes with speed direction at "
+                f"{sample.sample_id}/{counterpart.sample_id}"
+            )
+        comparison.value(
+            sample.condition,
+            counterpart.condition,
+            f"{sample.sample_id}:samples:jacobian_condition",
+        )
+
+    compare_pmks_point_symmetry(case_root, manifest, counterparts, comparison)
+    compare_pmks_link_symmetry(case_root, manifest, counterparts, comparison)
+    compare_pmks_prismatic_symmetry(case_root, manifest, counterparts, comparison)
+
+    covered = aligned_ids | set(counterparts)
+    missing = sorted(sample.sample_id for sample in pmks_samples if sample.sample_id not in covered)
+    if missing:
+        raise ContractError(f"{manifest['case_id']}: unverified PMKS rows: {missing}")
+    return {
+        "rows": len(counterparts),
+        "unverified_rows": len(missing),
+        "comparison": comparison,
+    }
+
+
+def compare_pmks_point_symmetry(
+    case_root: Path,
+    manifest: dict,
+    counterparts: dict[str, Sample],
+    comparison: SpeedSymmetryComparison,
+) -> None:
+    categories: list[tuple[str, list[str]]] = [
+        ("joints", [joint["id"] for joint in manifest["topology"]["joints"]]),
+        ("points", [point["id"] for point in manifest["topology"]["points"]]),
+        (
+            "com",
+            [
+                link
+                for link in manifest.get("mass_properties", {})
+                if link in {spec["id"] for spec in manifest["topology"]["links"]}
+            ],
+        ),
+    ]
+    signs = {"x": 1, "y": 1, "vx": -1, "vy": -1, "ax": 1, "ay": 1}
+    for category, identifiers in categories:
+        for identifier in identifiers:
+            rows = rows_by_id(
+                case_root / "pmks" / category / f"{identifier}.csv", POINT_HEADER
+            )
+            compare_pmks_rows(
+                rows, counterparts, signs, comparison, f"{category}:{identifier}"
+            )
+
+
+def compare_pmks_link_symmetry(
+    case_root: Path,
+    manifest: dict,
+    counterparts: dict[str, Sample],
+    comparison: SpeedSymmetryComparison,
+) -> None:
+    signs = {"theta_delta_rad": 1, "omega_rad_s": -1, "alpha_rad_s2": 1}
+    for link in manifest["topology"]["links"]:
+        identifier = link["id"]
+        rows = rows_by_id(
+            case_root / "pmks" / "links" / f"{identifier}.csv", LINK_HEADER
+        )
+        compare_pmks_rows(
+            rows,
+            counterparts,
+            signs,
+            comparison,
+            f"links:{identifier}",
+            circular_columns={"theta_delta_rad"},
+        )
+
+
+def compare_pmks_prismatic_symmetry(
+    case_root: Path,
+    manifest: dict,
+    counterparts: dict[str, Sample],
+    comparison: SpeedSymmetryComparison,
+) -> None:
+    if not manifest["capabilities"]["prismatic"]:
+        return
+    signs = {"position": 1, "velocity": -1, "acceleration": 1}
+    for joint in manifest["topology"]["joints"]:
+        if joint["type"] != "P":
+            continue
+        rows = rows_by_id(
+            case_root / "pmks" / "prismatic" / f"{joint['id']}.csv",
+            PRISMATIC_HEADER,
+        )
+        compare_pmks_rows(
+            rows, counterparts, signs, comparison, f"prismatic:{joint['id']}"
+        )
+
+
+def compare_pmks_rows(
+    rows: dict[str, dict[str, str]],
+    counterparts: dict[str, Sample],
+    signs: dict[str, int],
+    comparison: SpeedSymmetryComparison,
+    series: str,
+    circular_columns: set[str] | None = None,
+) -> None:
+    circular_columns = circular_columns or set()
+    for sample_id, counterpart in counterparts.items():
+        actual = rows[sample_id]
+        expected = rows[counterpart.sample_id]
+        for column, multiplier in signs.items():
+            comparison.value(
+                float(actual[column]),
+                multiplier * float(expected[column]),
+                f"{sample_id}:{series}:{column}",
+                circular=column in circular_columns,
+            )
 
 
 def validate_expected_sweeps(manifest: dict, samples: list[Sample]) -> None:

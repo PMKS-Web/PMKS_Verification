@@ -18,15 +18,18 @@ delta from the upstream base is enforced by
 [`pmks-fork-delta.json`](pmks-fork-delta.json).
 
 The corrected fork passes both input-speed directions for all five cases using the original
-one-degree increment, exact `rpm * pi / 30` speeds, comparison tolerances, and eligibility rules:
+one-degree increment, exact `rpm * pi / 30` speeds, comparison tolerances, and eligibility rules.
+Watt I and Stephenson III compare both directions directly to MATLAB. For the three full-cycle
+MATLAB cases, all positive-speed PMKS rows compare directly to MATLAB and every negative-speed row
+must satisfy the same-angle speed-reversal symmetry gate against that corroborated branch:
 
 | Case | Aligned rows | Maximum scaled error |
 | --- | ---: | ---: |
 | Slider-crank tracer | 361 / 361 | `1.061e-5` |
-| Stephenson III Example 2 | 201 / 201 | `9.512e-7` |
+| Stephenson III Example 2 | 201 / 201 | `1.698e-6` |
 | Teaching four-bar | 361 / 361 | `1.736e-5` |
 | Teaching slider-crank | 361 / 361 | `1.281e-5` |
-| Watt I | 23 / 23 | `4.391e-7` |
+| Watt I | 23 / 23 | `3.992e-7` |
 
 `1.0` is the failure threshold for scaled error. No tolerance was enlarged and no exclusion was
 added to obtain these results. Watt I and Stephenson III now agree for all eligible acceleration

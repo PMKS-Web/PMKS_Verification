@@ -18,6 +18,7 @@ from compare_baseline import (  # noqa: E402
     same_source_number,
 )
 from compare_motiongen import derivative_phase_offset, tangential_component  # noqa: E402
+from compare_oracles import SpeedSymmetryComparison  # noqa: E402
 from reference_data import (  # noqa: E402
     ContractError,
     Sample,
@@ -27,6 +28,7 @@ from reference_data import (  # noqa: E402
     validate_float_token,
     validate_sweep_order,
 )
+from validate_v1 import validate_json_schema  # noqa: E402
 
 
 class ContractUnitTests(unittest.TestCase):
@@ -61,6 +63,26 @@ class ContractUnitTests(unittest.TestCase):
             first.write_text("value\n1\n", encoding="utf-8")
             second.write_text("value\n1.000000000004\n", encoding="utf-8")
             compare_csv(first, second)
+
+    def test_pmks_speed_symmetry_requires_velocity_sign_reversal(self) -> None:
+        comparison = SpeedSymmetryComparison("case")
+        comparison.value(-2.0, -2.0, "negative velocity")
+        with self.assertRaises(ContractError):
+            comparison.value(-2.0, 2.0, "wrong velocity sign")
+
+    def test_case_json_schema_required_fields_are_enforced(self) -> None:
+        schema = {
+            "type": "object",
+            "required": ["exclusions"],
+            "properties": {"exclusions": {"type": "array"}},
+        }
+        with self.assertRaises(ContractError):
+            validate_json_schema({}, schema, "case")
+        validate_json_schema({"exclusions": []}, schema, "case")
+
+    def test_case_json_schema_cannot_silently_outgrow_validator(self) -> None:
+        with self.assertRaises(ContractError):
+            validate_json_schema("value", {"type": "string", "minLength": 1}, "case")
 
     def test_derived_comparison_report_allows_bounded_numeric_scatter(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

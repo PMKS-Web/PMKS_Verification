@@ -31,6 +31,11 @@ def main() -> None:
     tests: list[tuple[str, Callable[[Path], None], Callable[[Path], None]]] = [
         ("wrong assembly branch", perturb_branch, lambda root: compare_case(case(root, "teaching_four_bar"))),
         ("velocity sign", perturb_velocity, lambda root: compare_case(case(root, "teaching_four_bar"))),
+        (
+            "negative-speed branch",
+            perturb_negative_speed_branch,
+            lambda root: compare_case(case(root, "teaching_four_bar")),
+        ),
         ("tracer acceleration", perturb_tracer_acceleration, lambda root: compare_case(case(root, "slider_crank_tracer"))),
         ("slider-axis drift", perturb_slider_axis, lambda root: compare_case(case(root, "teaching_slider_crank"))),
         ("truncated sweep", perturb_truncated_sweep, lambda root: compare_case(case(root, "teaching_four_bar"))),
@@ -92,6 +97,13 @@ def perturb_velocity(root: Path) -> None:
     path = case(root, "teaching_four_bar") / "pmks" / "points" / "H.csv"
     mutate_csv(path, 10, "vx", lambda value: -float(value))
     mutate_csv(path, 10, "vy", lambda value: -float(value))
+
+
+def perturb_negative_speed_branch(root: Path) -> None:
+    path = case(root, "teaching_four_bar") / "pmks" / "points" / "H.csv"
+    mutate_csv_by_sample_id(
+        path, "pmks_negative_0010", "vx", lambda value: -float(value)
+    )
 
 
 def perturb_tracer_acceleration(root: Path) -> None:
@@ -179,6 +191,20 @@ def mutate_csv(
     header, rows = load_csv(path)
     value = transform(rows[row_index][column])
     rows[row_index][column] = str(value) if preserve_string else format(float(value), ".17g")
+    save_csv(path, header, rows)
+
+
+def mutate_csv_by_sample_id(
+    path: Path,
+    sample_id: str,
+    column: str,
+    transform: Callable[[str], object],
+) -> None:
+    header, rows = load_csv(path)
+    matches = [row for row in rows if row["sample_id"] == sample_id]
+    if len(matches) != 1:
+        raise RuntimeError(f"Expected one row for {sample_id}, found {len(matches)}")
+    matches[0][column] = format(float(transform(matches[0][column])), ".17g")
     save_csv(path, header, rows)
 
 
