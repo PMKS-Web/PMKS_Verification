@@ -6,6 +6,13 @@
   "matlab_rows": 201,
   "max_scaled_error": 1.6977742403699834e-06,
   "max_scaled_error_detail": "matlab_0041:links:EF:omega_rad_s",
+  "pmks_matlab_aligned_unique_rows": 200,
+  "pmks_rows": 200,
+  "pmks_speed_symmetry_compared_values": 0,
+  "pmks_speed_symmetry_max_scaled_error": 0.0,
+  "pmks_speed_symmetry_max_scaled_error_detail": "",
+  "pmks_speed_symmetry_rows": 0,
+  "pmks_unverified_rows": 0,
   "schema_version": 1,
   "status": "pass",
   "trust": {
