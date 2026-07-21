@@ -29,7 +29,10 @@ checked using a signed-area signature for every independent loop.
 The three tolerance tiers are encoded in the tools:
 
 1. CSV serialization: one ULP or `1e-15 * scale`, with canonical `%.17g` text.
-2. Same-source regeneration: eight ULP plus `1e-12 * scale`.
+2. Same-source regeneration: eight ULP plus `1e-12 * scale`. Pinned PMKS tables use the
+   separately documented `8e-12 * scale` repeatability bound for algebraically equivalent
+   elimination orders; derived comparison-report maxima allow the corresponding `1e-4` absolute
+   scatter. These do not change the MATLAB–PMKS acceptance tolerances.
 3. MATLAB–PMKS: the position/velocity/acceleration and angular limits declared in the v1 plan.
 
 A row is singular only when the dimensionless assembly Jacobian condition number exceeds

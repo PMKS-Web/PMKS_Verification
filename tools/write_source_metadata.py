@@ -16,6 +16,7 @@ PMKS_REPOSITORY = "https://github.com/PMKS-Web/PMKS"
 PMKS_COMMIT = "644b26c75b07182ce04dc6466cfec74ee4130c93"
 PMKS_UPSTREAM_REPOSITORY = "https://github.com/DesignEngrLab/PMKS"
 PMKS_UPSTREAM_COMMIT = "2a0a6fca957dd19844567702af663f607dc15dfe"
+PMKS_REPEATABILITY_RELATIVE_TOLERANCE = 8e-12
 
 SOURCE_DIRECTORIES = {
     "watt_i": Path("Mechanisms/Watt_I"),
@@ -119,6 +120,9 @@ def main() -> None:
         pmks_path = case_root / "pmks" / "source-metadata.json"
         pmks_metadata = load_json(pmks_path)
         pmks_metadata["adapter_content_sha256"] = adapter_hash
+        pmks_metadata["repeatability_relative_tolerance"] = (
+            PMKS_REPEATABILITY_RELATIVE_TOLERANCE
+        )
         if pmks_source_hash:
             pmks_metadata.update(
                 {

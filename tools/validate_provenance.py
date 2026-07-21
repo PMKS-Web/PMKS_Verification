@@ -10,6 +10,7 @@ from reference_data import ContractError, case_directories, load_json, sha256_fi
 from write_source_metadata import (
     MATLAB_REPOSITORY,
     PMKS_COMMIT,
+    PMKS_REPEATABILITY_RELATIVE_TOLERANCE,
     PMKS_REPOSITORY,
     PMKS_UPSTREAM_COMMIT,
     PMKS_UPSTREAM_REPOSITORY,
@@ -49,6 +50,7 @@ def validate(root: Path, repo: Path, pmks_root: Path) -> None:
         expected = {
             "source_repository": PMKS_REPOSITORY,
             "source_commit": PMKS_COMMIT,
+            "repeatability_relative_tolerance": PMKS_REPEATABILITY_RELATIVE_TOLERANCE,
             "adapter_content_sha256": adapter_hash,
             "source_content_sha256": pmks_source_hash,
             "source_tree_git": fork["source_tree_git"],

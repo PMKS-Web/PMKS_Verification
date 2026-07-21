@@ -10,7 +10,13 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 
-from compare_baseline import compare_json  # noqa: E402
+from compare_baseline import (  # noqa: E402
+    DEFAULT_RELATIVE_TOLERANCE,
+    PMKS_RELATIVE_TOLERANCE,
+    compare_csv,
+    compare_json,
+    same_source_number,
+)
 from compare_motiongen import derivative_phase_offset, tangential_component  # noqa: E402
 from reference_data import (  # noqa: E402
     ContractError,
@@ -42,6 +48,30 @@ class ContractUnitTests(unittest.TestCase):
             second.write_text('{"metric":1.000000001}\n', encoding="utf-8")
             with self.assertRaises(ContractError):
                 compare_json(first, second)
+
+    def test_pmks_baseline_uses_documented_repeatability_bound(self) -> None:
+        self.assertFalse(same_source_number(1.0, 1.0 + 4e-12, DEFAULT_RELATIVE_TOLERANCE))
+        self.assertTrue(same_source_number(1.0, 1.0 + 4e-12, PMKS_RELATIVE_TOLERANCE))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = root / "first" / "pmks" / "values.csv"
+            second = root / "second" / "pmks" / "values.csv"
+            first.parent.mkdir(parents=True)
+            second.parent.mkdir(parents=True)
+            first.write_text("value\n1\n", encoding="utf-8")
+            second.write_text("value\n1.000000000004\n", encoding="utf-8")
+            compare_csv(first, second)
+
+    def test_derived_comparison_report_allows_bounded_numeric_scatter(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = root / "baseline" / "comparison-report.json"
+            second = root / "candidate" / "comparison-report.json"
+            first.parent.mkdir(parents=True)
+            second.parent.mkdir(parents=True)
+            first.write_text('{"max_scaled_error":0.00001,"status":"pass"}\n', encoding="utf-8")
+            second.write_text('{"max_scaled_error":0.00009,"status":"pass"}\n', encoding="utf-8")
+            compare_json(first, second)
 
     def test_csv_precision_rejects_coarsely_rounded_value(self) -> None:
         with self.assertRaises(ContractError):

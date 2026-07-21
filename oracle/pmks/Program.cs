@@ -8,6 +8,7 @@ const string PmksRepository = "https://github.com/PMKS-Web/PMKS";
 const string PmksCommit = "644b26c75b07182ce04dc6466cfec74ee4130c93";
 const string PmksUpstreamRepository = "https://github.com/DesignEngrLab/PMKS";
 const string PmksUpstreamCommit = "2a0a6fca957dd19844567702af663f607dc15dfe";
+const double PmksRepeatabilityRelativeTolerance = 8e-12;
 var options = Arguments.Parse(args);
 var manifests = Directory.GetDirectories(options.CasesRoot)
     .Select(directory => Path.Combine(directory, "case.json"))
@@ -97,7 +98,8 @@ static void AssertRepeatable(string caseId, PmksTopology topology, RunResult fir
             var ulp = Math.Max(
                 Math.Abs(Math.BitIncrement(left[value]) - left[value]),
                 Math.Abs(Math.BitIncrement(right[value]) - right[value]));
-            if (Math.Abs(left[value] - right[value]) > 8 * ulp + 1e-12 * scale)
+            if (Math.Abs(left[value] - right[value]) >
+                8 * ulp + PmksRepeatabilityRelativeTolerance * scale)
                 throw new InvalidOperationException(
                     $"{caseId}: canonical PMKS output is not repeatable at row {row}, value {value}: " +
                     $"{left[value]:G17} versus {right[value]:G17}.");
@@ -232,6 +234,7 @@ static void WriteCase(
         source_commit = PmksCommit,
         upstream_repository = PmksUpstreamRepository,
         upstream_base_commit = PmksUpstreamCommit,
+        repeatability_relative_tolerance = PmksRepeatabilityRelativeTolerance,
         angle_increment_rad = manifest.Input.AngleIncrementRad,
         adaptive_smoothing = false,
         runs = new

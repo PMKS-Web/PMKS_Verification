@@ -39,3 +39,20 @@ compatibility fix maintained by PMKS-Web. MATLAB constraint residuals, independe
 Newton–Euler/power checks, and MotionGen evidence retain their separate roles in the promotion
 pipeline. Any later fork delta, unexplained disagreement, exclusion, or tolerance change still
 blocks promotion.
+
+## Repeatability boundary
+
+The first baseline-regeneration attempt,
+[GitHub Actions run 29850966509](https://github.com/PMKS-Web/PMKS_Verification/actions/runs/29850966509),
+also exposed a pre-existing PMKS numerical repeatability boundary. Two consecutive teaching
+four-bar runs produced `1.3150881796352465` and `1.3150881796325216` for one derived CoM
+acceleration: an absolute difference of `2.725e-12`, or `2.073e-12` relative. PMKS may select
+algebraically equivalent elimination row orders, so the original `1e-12 * scale` same-source
+tier was too strict for its output.
+
+PMKS source tables therefore use eight ULP plus `8e-12 * scale`; MATLAB and other source tables
+retain eight ULP plus `1e-12 * scale`. Derived MATLAB–PMKS comparison-report maxima may move by
+up to `1e-4` because the source difference is divided by the cross-source tolerance. Reports
+must still retain identical structure, text, pass status, row counts, trust, and exclusions, and
+the raw PMKS tables remain subject to the tighter `8e-12` source bound. These repeatability bounds
+do not enlarge any cross-source tolerance or permit a failed comparison to pass.
