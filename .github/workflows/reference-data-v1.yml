@@ -216,7 +216,7 @@ jobs:
           rsync -a artifacts/download/matlab/reference-data/v1/ artifacts/combined/reference-data/v1/
           rsync -a artifacts/download/pmks/reference-data/v1/ artifacts/combined/reference-data/v1/
           cp -R reference-data/v1/schema artifacts/combined/reference-data/v1/schema
-          cp reference-data/v1/README.md artifacts/combined/reference-data/v1/README.md
+          cp reference-data/v1/*.md artifacts/combined/reference-data/v1/
           cp reference-data/v1/pmks-fork-delta.json artifacts/combined/reference-data/v1/
           while IFS= read -r motiongen; do
             relative=${motiongen#reference-data/v1/}
