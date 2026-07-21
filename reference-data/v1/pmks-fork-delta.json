@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "repository": "https://github.com/PMKS-Web/PMKS",
+  "commit": "644b26c75b07182ce04dc6466cfec74ee4130c93",
+  "source_tree_git": "331d0e4cdfbe9f728ad65183f365552d0ba78b73",
+  "upstream_repository": "https://github.com/DesignEngrLab/PMKS",
+  "upstream_base_commit": "2a0a6fca957dd19844567702af663f607dc15dfe",
+  "upstream_base_tree_git": "cd6b654909094e05b0938f863c3b6f3d1ae166a6",
+  "patch_sha256": "2efa0c156bd8acaa83f104738c841046eb46e1a19e8414044c1992753fbe2c6b",
+  "allowed_paths": [
+    "PlanarMechanismSimulator/VelocityAndAcceleration/VelocityAndAccelerationSolver.cs"
+  ]
+}

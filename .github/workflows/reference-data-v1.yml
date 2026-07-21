@@ -1,0 +1,335 @@
+name: Cross-verified reference data v1
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reference-data-v1-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: 8.0.129
+  PMKS_COMMIT: 644b26c75b07182ce04dc6466cfec74ee4130c93
+
+jobs:
+  schema-and-pmks-build:
+    name: Schema, perturbation units, and locked PMKS build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out tested source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+
+      - name: Check out pinned PMKS fork
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          repository: PMKS-Web/PMKS
+          ref: 644b26c75b07182ce04dc6466cfec74ee4130c93
+          path: .external/PMKS
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out declared DesignEngrLab upstream base
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          repository: DesignEngrLab/PMKS
+          ref: 2a0a6fca957dd19844567702af663f607dc15dfe
+          path: .external/PMKS-upstream
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up exact .NET 8 SDK
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: 8.0.129
+
+      - name: Verify immutable fork identity and minimal delta
+        shell: bash
+        run: |
+          test "$(git -C .external/PMKS rev-parse HEAD)" = "$PMKS_COMMIT"
+          git -C .external/PMKS merge-base --is-ancestor "$PMKS_COMMIT" refs/remotes/origin/master
+          python3 tools/validate_pmks_fork.py \
+            --pmks-root .external/PMKS \
+            --upstream-root .external/PMKS-upstream
+          git -C .external/PMKS diff --exit-code
+
+      - name: Validate manifests and contract unit tests
+        run: |
+          python3 tools/validate_v1.py --root reference-data/v1
+          python3 -m unittest discover -s tools/tests -v
+
+      - name: Restore locked dependencies and build only the oracle/library graph
+        shell: bash
+        run: |
+          project="$GITHUB_WORKSPACE/.external/PMKS/PlanarMechanismSimulator/PlanarMechanismKinematicSimulator.csproj"
+          dotnet restore oracle/pmks/PmksOracle.csproj --locked-mode -p:PmksProject="$project"
+          dotnet build oracle/pmks/PmksOracle.csproj --no-restore -c Release -p:PmksProject="$project"
+
+      - name: Verify no source mutation
+        run: git diff --exit-code
+
+  matlab-candidate:
+    name: MATLAB R2024a candidate
+    needs: schema-and-pmks-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out tested source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up MATLAB R2024a
+        uses: matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f # v3
+        with:
+          release: R2024a
+          products: Symbolic_Math_Toolbox
+          cache: true
+
+      - name: Generate MATLAB v1 source tables from clean definitions
+        uses: matlab-actions/run-command@bcd446a219949c24051c1d04a4b4e0274c42f23b # v3
+        with:
+          command: addpath(fullfile(pwd, 'verification')); run_verification(fullfile(pwd, 'artifacts', 'candidate', 'reference-data', 'v1'))
+
+      - name: Reject legacy output and tracked mutations
+        shell: bash
+        run: |
+          if find artifacts/candidate -type d -name CSVOutput -print -quit | grep -q .; then
+            echo "::error::MATLAB candidate contains a legacy CSVOutput directory"
+            exit 1
+          fi
+          if find artifacts/candidate -type f -name Mechanism.mat -print -quit | grep -q .; then
+            echo "::error::MATLAB candidate contains a scratch Mechanism.mat file"
+            exit 1
+          fi
+          git diff --exit-code
+
+      - name: Upload MATLAB candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: matlab-candidate-${{ github.run_id }}
+          path: artifacts/candidate
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload failed MATLAB diagnostic
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: failed-matlab-candidate-${{ github.run_id }}
+          path: artifacts/candidate
+          if-no-files-found: warn
+          retention-days: 30
+
+  pmks-oracle:
+    name: Pinned PMKS positive/negative oracle
+    needs: schema-and-pmks-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out tested source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+
+      - name: Check out pinned PMKS fork
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          repository: PMKS-Web/PMKS
+          ref: 644b26c75b07182ce04dc6466cfec74ee4130c93
+          path: .external/PMKS
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up exact .NET 8 SDK
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: 8.0.129
+
+      - name: Build and run pinned PMKS fork
+        shell: bash
+        run: |
+          test "$(git -C .external/PMKS rev-parse HEAD)" = "$PMKS_COMMIT"
+          python3 tools/validate_pmks_fork.py --pmks-root .external/PMKS
+          project="$GITHUB_WORKSPACE/.external/PMKS/PlanarMechanismSimulator/PlanarMechanismKinematicSimulator.csproj"
+          dotnet restore oracle/pmks/PmksOracle.csproj --locked-mode -p:PmksProject="$project"
+          dotnet run --project oracle/pmks/PmksOracle.csproj --no-restore -c Release \
+            -p:PmksProject="$project" -- \
+            --cases-root reference-data/v1/cases \
+            --output-root artifacts/candidate/reference-data/v1
+          git -C .external/PMKS diff --exit-code
+          git diff --exit-code
+
+      - name: Upload PMKS oracle candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pmks-candidate-${{ github.run_id }}
+          path: artifacts/candidate
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload failed PMKS diagnostic
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: failed-pmks-candidate-${{ github.run_id }}
+          path: artifacts/candidate
+          if-no-files-found: warn
+          retention-days: 30
+
+  cross-source-and-promote:
+    name: Align, compare, check dynamics, and publish trusted candidate
+    needs: [matlab-candidate, pmks-oracle]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      TESTED_MERGE_SHA: ${{ github.sha }}
+    steps:
+      - name: Check out tested source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+
+      - name: Check out pinned PMKS fork for provenance
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          repository: PMKS-Web/PMKS
+          ref: 644b26c75b07182ce04dc6466cfec74ee4130c93
+          path: .external/PMKS
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up exact .NET identity
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: 8.0.129
+
+      - name: Download MATLAB candidate
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: matlab-candidate-${{ github.run_id }}
+          path: artifacts/download/matlab
+
+      - name: Download PMKS candidate
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: pmks-candidate-${{ github.run_id }}
+          path: artifacts/download/pmks
+
+      - name: Assemble candidate and committed MotionGen evidence
+        shell: bash
+        run: |
+          mkdir -p artifacts/combined/reference-data/v1
+          rsync -a artifacts/download/matlab/reference-data/v1/ artifacts/combined/reference-data/v1/
+          rsync -a artifacts/download/pmks/reference-data/v1/ artifacts/combined/reference-data/v1/
+          cp -R reference-data/v1/schema artifacts/combined/reference-data/v1/schema
+          cp reference-data/v1/*.md artifacts/combined/reference-data/v1/
+          cp reference-data/v1/pmks-fork-delta.json artifacts/combined/reference-data/v1/
+          while IFS= read -r motiongen; do
+            relative=${motiongen#reference-data/v1/}
+            mkdir -p "artifacts/combined/reference-data/v1/$(dirname "$relative")"
+            cp -R "$motiongen" "artifacts/combined/reference-data/v1/$relative"
+          done < <(find reference-data/v1/cases -type d -name motiongen | sort)
+
+      - name: Write and validate stable source provenance
+        run: |
+          python3 tools/write_source_metadata.py \
+            --root artifacts/combined/reference-data/v1 \
+            --repo-root . \
+            --pmks-root .external/PMKS
+          python3 tools/validate_provenance.py \
+            --root artifacts/combined/reference-data/v1 \
+            --repo-root . \
+            --pmks-root .external/PMKS
+
+      - name: Validate complete v1 contract
+        run: python3 tools/validate_v1.py --root artifacts/combined/reference-data/v1 --require-sources
+
+      - name: Compare MATLAB with PMKS
+        id: oracle_comparison
+        continue-on-error: true
+        run: python3 tools/compare_oracles.py --root artifacts/combined/reference-data/v1
+
+      - name: Check independent Newton-Euler equilibrium and power
+        id: dynamics_check
+        continue-on-error: true
+        run: python3 tools/check_dynamics.py --root artifacts/combined/reference-data/v1
+
+      - name: Compare committed MotionGen fixtures
+        id: motiongen_comparison
+        continue-on-error: true
+        run: python3 tools/compare_motiongen.py --root artifacts/combined/reference-data/v1 --repo-root .
+
+      - name: Run candidate perturbation tests
+        id: perturbation_tests
+        continue-on-error: true
+        run: python3 tools/perturbation_tests.py --root artifacts/combined/reference-data/v1 --repo-root . --pmks-root .external/PMKS
+
+      - name: Compare with committed baseline
+        id: baseline_comparison
+        continue-on-error: true
+        run: >-
+          python3 tools/compare_baseline.py
+          --baseline reference-data/v1
+          --candidate artifacts/combined/reference-data/v1
+          --allow-missing
+
+      - name: Require every promotion gate
+        shell: bash
+        run: |
+          test "${{ steps.oracle_comparison.outcome }}" = success
+          test "${{ steps.dynamics_check.outcome }}" = success
+          test "${{ steps.motiongen_comparison.outcome }}" = success
+          test "${{ steps.perturbation_tests.outcome }}" = success
+          test "${{ steps.baseline_comparison.outcome }}" = success
+
+      - name: Record volatile run identity and checksums
+        shell: bash
+        run: |
+          dotnet_version=$(dotnet --version)
+          python3 tools/write_run_report.py \
+            --v1-root artifacts/combined/reference-data/v1 \
+            --output artifacts/combined/run-report.json \
+            --matlab-report artifacts/download/matlab/reference-data/run-report.json \
+            --dotnet-version "$dotnet_version"
+          cd artifacts/combined
+          find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+
+      - name: Upload trusted candidate
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: trusted-reference-data-v1-${{ github.sha }}
+          path: artifacts/combined
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload verified pull-request candidate
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: verified-pr-reference-data-v1-${{ github.sha }}
+          path: artifacts/combined
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload failed diagnostic candidate
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: failed-reference-data-v1-${{ github.sha }}
+          path: |
+            artifacts/download
+            artifacts/combined
+          if-no-files-found: warn
+          retention-days: 14

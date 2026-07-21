@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "case_id": "teaching_four_bar",
+  "model_url": "https://motiongen.io/core",
+  "model_id": "OocSpHMBTmcRQwFSJE9x",
+  "model_title": "PMKS Verification - Teaching Four-Bar - 10_31 RPM",
+  "model_access": "authenticated-account",
+  "motiongen_app_version": "1.1.5",
+  "graph": {
+    "kind": "link",
+    "id": "CDEI"
+  },
+  "actuation": {
+    "profile": "constant-array",
+    "source_rpm": 10.31,
+    "target_rpm": 10.31,
+    "source_rad_s": 1.0796606752836921,
+    "target_rad_s": 1.0796606752836921
+  },
+  "source_units": {
+    "time": "s",
+    "length": "in",
+    "angle": "rad"
+  },
+  "original_filename": "link_table_7_16_2026_16_37_45.xlsx",
+  "original_xlsx_sha256": "97dd1e7b503185a95f82793e1f7b4005945ca5ff704e4c115c8c566cc937f930",
+  "sheets": [
+    {
+      "name": "Sheet1",
+      "header": [
+        "Time [s]",
+        "Theta [rad]",
+        "Angular Vel. [rad/s]",
+        "Angular Accel. [rad/s^2]"
+      ],
+      "row_count": 3601
+    }
+  ],
+  "download_time_utc": "2026-07-16T20:37:45.771Z",
+  "normalization_script_sha256": "8a849972c60de0393fe4a40b2005c78f6dd605e82f886232eafc1308675d38bb",
+  "coordinate_transform": {
+    "spatial_scale": 1,
+    "rotation": [
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "translation": [
+      2.286,
+      0
+    ],
+    "speed_ratio": 1
+  },
+  "quantization_bound": {
+    "position": 0.0005,
+    "speed": 0.0005,
+    "acceleration": 0.0005,
+    "angle": 0.0005,
+    "angular_velocity": 0.0005,
+    "angular_acceleration": 0.0005
+  },
+  "terminal_null_columns": [
+    "omega_rad_s",
+    "alpha_rad_s2"
+  ],
+  "normalized_csv": "CDEI.csv",
+  "normalized_csv_sha256": "bd0865bdad66f06808c1c3d9f1d052c9538dd2c50f54d8277ca353d989b4ba4d",
+  "original_discarded": true,
+  "renormalization_limitation": "The original XLSX is intentionally not committed; future normalization cannot be reproduced without re-exporting the retained MotionGen model."
+}

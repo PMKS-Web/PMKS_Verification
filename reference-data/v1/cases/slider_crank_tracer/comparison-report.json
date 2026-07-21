@@ -1,0 +1,24 @@
+{
+  "aligned_rows": 361,
+  "case_id": "slider_crank_tracer",
+  "compared_values": 18405,
+  "excluded_alignment_rows": 0,
+  "matlab_rows": 361,
+  "max_scaled_error": 1.0608926746728116e-05,
+  "max_scaled_error_detail": "matlab_0333:joints:B:y",
+  "pmks_matlab_aligned_unique_rows": 360,
+  "pmks_rows": 720,
+  "pmks_speed_symmetry_compared_values": 16560,
+  "pmks_speed_symmetry_rows": 360,
+  "pmks_speed_symmetry_status": "pass",
+  "pmks_unverified_rows": 0,
+  "schema_version": 1,
+  "status": "pass",
+  "trust": {
+    "com": "matlab-pmks-fork",
+    "dynamics": "not-applicable",
+    "kinematics": "matlab-pmks-fork",
+    "motiongen": "not-applicable"
+  },
+  "used_exclusions": []
+}

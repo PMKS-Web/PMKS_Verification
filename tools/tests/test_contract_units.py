@@ -1,0 +1,138 @@
+from __future__ import annotations
+
+import csv
+import math
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+TOOLS = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(TOOLS))
+
+from compare_baseline import (  # noqa: E402
+    DEFAULT_RELATIVE_TOLERANCE,
+    PMKS_RELATIVE_TOLERANCE,
+    compare_csv,
+    compare_json,
+    same_source_number,
+)
+from compare_motiongen import derivative_phase_offset, tangential_component  # noqa: E402
+from compare_oracles import SpeedSymmetryComparison  # noqa: E402
+from reference_data import (  # noqa: E402
+    ContractError,
+    Sample,
+    circular_difference,
+    reject_legacy,
+    signed_area,
+    validate_float_token,
+    validate_sweep_order,
+)
+from validate_v1 import validate_json_schema  # noqa: E402
+
+
+class ContractUnitTests(unittest.TestCase):
+    def test_json_baseline_uses_same_source_numeric_tier(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = root / "first.json"
+            second = root / "second.json"
+            first.write_text('{"metric":1.0,"label":"stable"}\n', encoding="utf-8")
+            second.write_text('{"metric":1.0000000000005,"label":"stable"}\n', encoding="utf-8")
+            compare_json(first, second)
+
+    def test_json_baseline_rejects_material_numeric_change(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = root / "first.json"
+            second = root / "second.json"
+            first.write_text('{"metric":1.0}\n', encoding="utf-8")
+            second.write_text('{"metric":1.000000001}\n', encoding="utf-8")
+            with self.assertRaises(ContractError):
+                compare_json(first, second)
+
+    def test_pmks_baseline_uses_documented_repeatability_bound(self) -> None:
+        self.assertFalse(same_source_number(1.0, 1.0 + 4e-12, DEFAULT_RELATIVE_TOLERANCE))
+        self.assertTrue(same_source_number(1.0, 1.0 + 4e-12, PMKS_RELATIVE_TOLERANCE))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = root / "first" / "pmks" / "values.csv"
+            second = root / "second" / "pmks" / "values.csv"
+            first.parent.mkdir(parents=True)
+            second.parent.mkdir(parents=True)
+            first.write_text("value\n1\n", encoding="utf-8")
+            second.write_text("value\n1.000000000004\n", encoding="utf-8")
+            compare_csv(first, second)
+
+    def test_pmks_speed_symmetry_requires_velocity_sign_reversal(self) -> None:
+        comparison = SpeedSymmetryComparison("case")
+        comparison.value(-2.0, -2.0, "negative velocity")
+        with self.assertRaises(ContractError):
+            comparison.value(-2.0, 2.0, "wrong velocity sign")
+
+    def test_case_json_schema_required_fields_are_enforced(self) -> None:
+        schema = {
+            "type": "object",
+            "required": ["exclusions"],
+            "properties": {"exclusions": {"type": "array"}},
+        }
+        with self.assertRaises(ContractError):
+            validate_json_schema({}, schema, "case")
+        validate_json_schema({"exclusions": []}, schema, "case")
+
+    def test_case_json_schema_cannot_silently_outgrow_validator(self) -> None:
+        with self.assertRaises(ContractError):
+            validate_json_schema("value", {"type": "string", "minLength": 1}, "case")
+
+    def test_derived_comparison_report_allows_bounded_numeric_scatter(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = root / "baseline" / "comparison-report.json"
+            second = root / "candidate" / "comparison-report.json"
+            first.parent.mkdir(parents=True)
+            second.parent.mkdir(parents=True)
+            first.write_text('{"max_scaled_error":0.00001,"status":"pass"}\n', encoding="utf-8")
+            second.write_text('{"max_scaled_error":0.00009,"status":"pass"}\n', encoding="utf-8")
+            compare_json(first, second)
+
+    def test_csv_precision_rejects_coarsely_rounded_value(self) -> None:
+        with self.assertRaises(ContractError):
+            validate_float_token("3.14159", Path("value.csv"), 2, "x")
+
+    def test_duplicate_or_restarted_sweep_is_rejected(self) -> None:
+        samples = [
+            Sample("a", "s0", 0, 0, 1, 0, 1, "eligible"),
+            Sample("b", "s1", 0, 1, 1, 1, 1, "eligible"),
+            Sample("c", "s0", 1, 2, 1, 2, 1, "eligible"),
+        ]
+        with self.assertRaises(ContractError):
+            validate_sweep_order(samples, Path("samples.csv"))
+
+    def test_wrong_assembly_branch_changes_signed_area(self) -> None:
+        expected = signed_area([(0, 0), (1, 0), (1, 1), (0, 1)])
+        wrong = signed_area([(0, 0), (0, 1), (1, 1), (1, 0)])
+        self.assertGreater(expected, 0)
+        self.assertLess(wrong, 0)
+
+    def test_cycle_endpoint_angle_is_compared_modulo_two_pi(self) -> None:
+        self.assertLess(circular_difference(0, 2 * math.pi), 1e-14)
+
+    def test_legacy_path_is_rejected(self) -> None:
+        with self.assertRaises(ContractError):
+            reject_legacy(Path("/tmp/legacy/reference-output"))
+
+    def test_motiongen_scalar_acceleration_is_tangential_not_vector_magnitude(self) -> None:
+        self.assertEqual(tangential_component(0, 2, -3, 0), 0)
+        self.assertIsNone(tangential_component(0, 0, 4, 0))
+
+    def test_motiongen_forward_difference_phase_offsets(self) -> None:
+        speed = 1.2
+        self.assertAlmostEqual(derivative_phase_offset("x", speed, 60), 0)
+        self.assertAlmostEqual(derivative_phase_offset("speed", speed, 60), 0.01)
+        self.assertAlmostEqual(derivative_phase_offset("acceleration", speed, 60), 0.02)
+        self.assertAlmostEqual(derivative_phase_offset("omega_rad_s", speed, 60), 0.01)
+        self.assertAlmostEqual(derivative_phase_offset("alpha_rad_s2", speed, 60), 0.02)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "case_id": "stephenson_iii_example_2",
+  "title": "Stephenson III Example 2",
+  "units": { "length": "m", "time": "s", "angle": "rad", "mass": "kg", "force": "N" },
+  "characteristic_length": 25.179356624028344,
+  "topology": {
+    "joints": [
+      { "id": "A", "type": "R", "links": ["ground", "AB"], "initial": [7, 4] },
+      { "id": "B", "type": "R", "links": ["AB", "BCE"], "initial": [5, 16] },
+      { "id": "C", "type": "R", "links": ["BCE", "CD"], "initial": [25, 25] },
+      { "id": "D", "type": "R", "links": ["CD", "ground"], "initial": [23, 10] },
+      { "id": "E", "type": "R", "links": ["BCE", "EF"], "initial": [18, 35] },
+      { "id": "F", "type": "R", "links": ["EF", "FG"], "initial": [43, 32] },
+      { "id": "G", "type": "R", "links": ["FG", "ground"], "initial": [45, 17] }
+    ],
+    "points": [],
+    "links": [
+      { "id": "AB", "joints": ["A", "B"], "angle_basis": ["A", "B"] },
+      { "id": "BCE", "joints": ["B", "C", "E"], "angle_basis": ["B", "C"] },
+      { "id": "CD", "joints": ["C", "D"], "angle_basis": ["D", "C"] },
+      { "id": "EF", "joints": ["E", "F"], "angle_basis": ["E", "F"] },
+      { "id": "FG", "joints": ["F", "G"], "angle_basis": ["G", "F"] }
+    ],
+    "independent_loops": [["A", "B", "C", "D"], ["B", "E", "F", "G", "D", "C"]]
+  },
+  "input": {
+    "joint": "A", "link": "AB", "rpm": 10, "speed_rad_s": 1.0471975511965976,
+    "angle_increment_rad": 0.017453292519943295,
+    "expected_sweeps": [{ "direction": 1, "rows": 42 }, { "direction": -1, "rows": 100 }, { "direction": 1, "rows": 59 }]
+  },
+  "jacobian": {
+    "unknown_joints": ["C", "E", "F"],
+    "length_constraints": [["B", "C"], ["B", "E"], ["C", "E"], ["C", "D"], ["E", "F"], ["F", "G"]],
+    "guide_constraints": [], "singular_condition_threshold": 10000000000
+  },
+  "mass_properties": {
+    "AB": { "mass": 5, "inertia": 0.1, "com_initial": [6, 10] },
+    "BCE": { "mass": 10, "inertia": 0.2, "com_initial": [16, 25.333333333333332] },
+    "CD": { "mass": 5, "inertia": 0.1, "com_initial": [24, 17.5] },
+    "EF": { "mass": 10, "inertia": 0.2, "com_initial": [30.5, 33.5] },
+    "FG": { "mass": 5, "inertia": 0.1, "com_initial": [44, 24.5] }
+  },
+  "dynamics": {
+    "scenarios": ["newton_no_gravity", "newton_gravity"], "gravity": [0, -9.81],
+    "load": { "force": [50, 0], "link": "FG", "application_average": ["F", "G"] },
+    "input_torque_link": "AB",
+    "reaction_ownership": {
+      "AB": { "A": 1, "B": 1 }, "BCE": { "B": -1, "C": 1, "E": 1 },
+      "CD": { "C": -1, "D": 1 }, "EF": { "E": -1, "F": 1 }, "FG": { "F": -1, "G": 1 }
+    }
+  },
+  "capabilities": { "joints": true, "points": false, "com": true, "links": true, "prismatic": false, "dynamics": true, "motiongen": false },
+  "trust": { "kinematics": "matlab-pmks-fork", "com": "matlab-pmks-fork", "dynamics": "newton-euler-consistency", "motiongen": "not-applicable" },
+  "exclusions": []
+}

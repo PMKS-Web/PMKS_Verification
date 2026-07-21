@@ -1,2 +1,10 @@
 artifacts/
 *.asv
+.external/
+**/bin/
+**/obj/
+node_modules
+__pycache__/
+*.py[cod]
+Mechanisms/**/CSVOutput/
+Mechanisms/**/Mechanism.mat

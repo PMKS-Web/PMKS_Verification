@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "case_id": "teaching_slider_crank",
+  "model_url": "https://motiongen.io/core",
+  "model_id": "MEjogZJd5srJlJ7nmOXN",
+  "model_title": "PMKS Verification - Teaching Slider-Crank - 15_1 RPM - Endpoint Ground",
+  "model_access": "authenticated-account",
+  "motiongen_app_version": "1.1.5",
+  "graph": {
+    "kind": "joint",
+    "id": "C"
+  },
+  "actuation": {
+    "profile": "constant-array",
+    "source_rpm": 15.1,
+    "target_rpm": 15.1,
+    "source_rad_s": 1.5812683023068625,
+    "target_rad_s": 1.5812683023068625
+  },
+  "source_units": {
+    "time": "s",
+    "length": "in",
+    "angle": "rad"
+  },
+  "original_filename": "joint_table_7_16_2026_17_2_40.xlsx",
+  "original_xlsx_sha256": "53d94b438cfb2839e5580dd5a18ecc91db552f66d4fbeb20c224024bae0a9004",
+  "sheets": [
+    {
+      "name": "Sheet1",
+      "header": [
+        "Time [s]",
+        "x [in]",
+        "y [in]",
+        "Displacement [in]",
+        "Linear Vel. [in/s]",
+        "Linear Accel. [in/s^2]"
+      ],
+      "row_count": 3601
+    }
+  ],
+  "download_time_utc": "2026-07-16T21:02:40.173Z",
+  "normalization_script_sha256": "8a849972c60de0393fe4a40b2005c78f6dd605e82f886232eafc1308675d38bb",
+  "coordinate_transform": {
+    "spatial_scale": 3.3333333333333335,
+    "rotation": [
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "translation": [
+      0.4566666666666652,
+      10.01
+    ],
+    "speed_ratio": 1
+  },
+  "quantization_bound": {
+    "position": 0.0016666666666666668,
+    "speed": 0.0016666666666666668,
+    "acceleration": 0.0016666666666666668,
+    "angle": 0.0005,
+    "angular_velocity": 0.0005,
+    "angular_acceleration": 0.0005
+  },
+  "terminal_null_columns": [
+    "speed",
+    "acceleration"
+  ],
+  "normalized_csv": "C.csv",
+  "normalized_csv_sha256": "0ac7725dcf7d298e54db41a4cff09710918d992a25582de37f6f24a61e8a06fe",
+  "original_discarded": true,
+  "renormalization_limitation": "The original XLSX is intentionally not committed; future normalization cannot be reproduced without re-exporting the retained MotionGen model."
+}

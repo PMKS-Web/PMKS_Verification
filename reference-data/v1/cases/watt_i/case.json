@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "case_id": "watt_i",
+  "title": "Watt I six-bar",
+  "units": { "length": "m", "time": "s", "angle": "rad", "mass": "kg", "force": "N" },
+  "characteristic_length": 7.180529228406497,
+  "topology": {
+    "joints": [
+      { "id": "A", "type": "R", "links": ["ground", "AB"], "initial": [-3.74, -2.41] },
+      { "id": "B", "type": "R", "links": ["AB", "BCD"], "initial": [-2.72, 0.91] },
+      { "id": "C", "type": "R", "links": ["BCD", "CFG"], "initial": [1.58, 0.43] },
+      { "id": "D", "type": "R", "links": ["BCD", "DE"], "initial": [-0.24, 4.01] },
+      { "id": "E", "type": "R", "links": ["DE", "EF"], "initial": [5.08, 5.31] },
+      { "id": "F", "type": "R", "links": ["EF", "CFG"], "initial": [8.14, 3.35] },
+      { "id": "G", "type": "R", "links": ["CFG", "ground"], "initial": [7.32, -3.51] }
+    ],
+    "points": [],
+    "links": [
+      { "id": "AB", "joints": ["A", "B"], "angle_basis": ["A", "B"] },
+      { "id": "BCD", "joints": ["B", "C", "D"], "angle_basis": ["B", "C"] },
+      { "id": "DE", "joints": ["D", "E"], "angle_basis": ["D", "E"] },
+      { "id": "EF", "joints": ["E", "F"], "angle_basis": ["E", "F"] },
+      { "id": "CFG", "joints": ["C", "F", "G"], "angle_basis": ["G", "C"] }
+    ],
+    "independent_loops": [["A", "B", "C", "G"], ["B", "D", "E", "F", "C"]]
+  },
+  "input": {
+    "joint": "A",
+    "link": "AB",
+    "rpm": 10,
+    "speed_rad_s": 1.0471975511965976,
+    "angle_increment_rad": 0.017453292519943295,
+    "expected_sweeps": [
+      { "direction": 1, "rows": 6 },
+      { "direction": -1, "rows": 11 },
+      { "direction": 1, "rows": 6 }
+    ]
+  },
+  "jacobian": {
+    "unknown_joints": ["C", "D", "E", "F"],
+    "length_constraints": [["B", "C"], ["C", "G"], ["B", "D"], ["C", "D"], ["D", "E"], ["E", "F"], ["C", "F"], ["F", "G"]],
+    "guide_constraints": [],
+    "singular_condition_threshold": 10000000000
+  },
+  "mass_properties": {
+    "AB": { "mass": 5, "inertia": 0.1, "com_initial": [-3.23, -0.75] },
+    "BCD": { "mass": 10, "inertia": 0.2, "com_initial": [-0.46, 1.7833333333333334] },
+    "DE": { "mass": 5, "inertia": 0.1, "com_initial": [2.42, 4.66] },
+    "EF": { "mass": 10, "inertia": 0.2, "com_initial": [6.61, 4.33] },
+    "CFG": { "mass": 5, "inertia": 0.1, "com_initial": [5.68, 0.09] }
+  },
+  "dynamics": {
+    "scenarios": ["newton_no_gravity", "newton_gravity"],
+    "gravity": [0, -9.81],
+    "load": { "force": [50, 25], "link": "CFG", "application_average": ["C", "F", "G"] },
+    "input_torque_link": "AB",
+    "reaction_ownership": {
+      "AB": { "A": 1, "B": 1 },
+      "BCD": { "B": -1, "C": 1, "D": 1 },
+      "DE": { "D": -1, "E": 1 },
+      "EF": { "E": -1, "F": 1 },
+      "CFG": { "C": -1, "F": -1, "G": 1 }
+    }
+  },
+  "capabilities": { "joints": true, "points": false, "com": true, "links": true, "prismatic": false, "dynamics": true, "motiongen": false },
+  "trust": { "kinematics": "matlab-pmks-fork", "com": "matlab-pmks-fork", "dynamics": "newton-euler-consistency", "motiongen": "not-applicable" },
+  "exclusions": []
+}

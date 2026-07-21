@@ -1,0 +1,27 @@
+{
+  "case_id": "teaching_four_bar",
+  "compared_values": 145800,
+  "direction_oracle": "pmks",
+  "excluded_terminal_cells": [],
+  "maximum_tolerance_detail": "G:matlab_0133:speed:cycle_07",
+  "maximum_tolerance_ratio": 0.9747961677567877,
+  "motiongen_cycles_compared": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "scalar_channels": [
+    "joint speed magnitude",
+    "joint tangential acceleration"
+  ],
+  "schema_version": 1,
+  "status": "pass",
+  "trust": "matlab-pmks-fork-motiongen",
+  "undefined_tangential_cells": []
+}

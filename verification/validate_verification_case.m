@@ -71,6 +71,8 @@ if config.hasDynamics
     validateDynamics(Mechanism, config, rowCount);
 end
 
+validateRegressionGates(Mechanism, config);
+
 metrics = struct();
 metrics.name = config.name;
 metrics.rows = rowCount;
@@ -79,6 +81,52 @@ metrics.hasDynamics = config.hasDynamics;
 metrics.maxLengthDrift = maxLengthDrift;
 metrics.maxVelocityConstraintResidual = maxVelocityResidual;
 metrics.maxAccelerationConstraintResidual = maxAccelerationResidual;
+end
+
+function validateRegressionGates(Mechanism, config)
+switch config.name
+    case 'teaching_four_bar'
+        for name = {'E', 'G', 'H'}
+            value = speedValue(Mechanism.LinAcc.Joint.(name{1}), config.speedField);
+            if max(vecnorm(value(:, 1:2), 2, 2)) <= 1e-10
+                error('Verification:TeachingAccelerationRegression', ...
+                    'Teaching point %s acceleration regressed to zero.', name{1});
+            end
+        end
+
+    case 'teaching_slider_crank'
+        for name = {'AB', 'BCE'}
+            positions = Mechanism.LinkCoM.(name{1});
+            if max(vecnorm(positions(:, 1:2) - positions(1, 1:2), 2, 2)) <= 1e-10
+                error('Verification:SliderComRegression', ...
+                    'Teaching slider CoM %s no longer transports with its link.', name{1});
+            end
+        end
+
+    case 'slider_crank_tracer'
+        velocity = speedValue(Mechanism.LinVel.Joint.D, config.speedField);
+        acceleration = speedValue(Mechanism.LinAcc.Joint.D, config.speedField);
+        if max(vecnorm(velocity(:, 1:2), 2, 2)) <= 1e-10 || ...
+                max(vecnorm(acceleration(:, 1:2), 2, 2)) <= 1e-10
+            error('Verification:TracerDerivativeRegression', ...
+                'Slider tracer velocity or acceleration regressed to zero.');
+        end
+end
+
+if any(diff(sign(Mechanism.inputSpeed(:, 1))) ~= 0)
+    changes = find(diff(sign(Mechanism.inputSpeed(:, 1))) ~= 0) + 1;
+    for i = 1:numel(changes)
+        row = changes(i);
+        if norm(Mechanism.Joint.B(row, 1:2) - Mechanism.Joint.B(row - 1, 1:2)) > 1e-10
+            error('Verification:ToggleBoundaryRegression', ...
+                '%s did not retain the duplicated numeric toggle boundary at row %d.', config.name, row);
+        end
+    end
+end
+end
+
+function value = speedValue(value, speedField)
+if isstruct(value), value = value.(speedField); end
 end
 
 function validateTrajectoryStruct(container, rowCount, label)

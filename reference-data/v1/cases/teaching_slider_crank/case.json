@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "case_id": "teaching_slider_crank",
+  "title": "Teaching slider-crank",
+  "units": { "length": "m", "time": "s", "angle": "rad", "mass": "kg", "force": "N" },
+  "characteristic_length": 15.243808579223238,
+  "topology": {
+    "joints": [
+      { "id": "A", "type": "R", "links": ["ground", "AB"], "initial": [13.79, 10.01] },
+      { "id": "B", "type": "R", "links": ["AB", "BCE"], "initial": [13.79, 13.82] },
+      { "id": "C", "type": "P", "links": ["BCE", "ground"], "initial": [-0.97, 10.01], "guide_axis": [1, 0] }
+    ],
+    "points": [{ "id": "E", "link": "BCE", "initial": [13.79, 13.82], "coincident_with": "B" }],
+    "links": [
+      { "id": "AB", "joints": ["A", "B"], "angle_basis": ["A", "B"] },
+      { "id": "BCE", "joints": ["B", "C"], "angle_basis": ["B", "C"] }
+    ],
+    "independent_loops": [["A", "B", "C"]]
+  },
+  "input": {
+    "joint": "A", "link": "AB", "rpm": 15.1, "speed_rad_s": 1.5812683023068625,
+    "angle_increment_rad": 0.017453292519943295,
+    "expected_sweeps": [{ "direction": 1, "rows": 360 }, { "direction": 1, "rows": 1, "cycle_endpoint": true }]
+  },
+  "jacobian": {
+    "unknown_joints": ["C"], "length_constraints": [["B", "C"]],
+    "guide_constraints": [{ "joint": "C", "axis": [1, 0] }], "singular_condition_threshold": 10000000000
+  },
+  "mass_properties": {
+    "AB": { "mass": 1.08532, "inertia": 0.0004647594, "com_initial": [0, 0.1] },
+    "BCE": { "mass": 0.50144, "inertia": 0.0030344427, "com_initial": [0.5, 0.7] },
+    "Piston": { "mass": 1.31788, "inertia": 0, "com_initial": [-0.97, 10.01] }
+  },
+  "capabilities": { "joints": true, "points": true, "com": true, "links": true, "prismatic": true, "dynamics": false, "motiongen": true },
+  "trust": { "kinematics": "matlab-pmks-fork-motiongen", "com": "diagnostic-only", "dynamics": "not-applicable", "motiongen": "matlab-pmks-fork-motiongen" },
+  "motiongen": {
+    "app_version": "1.1.5",
+    "model_url": "https://motiongen.io/core",
+    "model_id": "MEjogZJd5srJlJ7nmOXN",
+    "model_title": "PMKS Verification - Teaching Slider-Crank - 15_1 RPM - Endpoint Ground",
+    "model_access": "authenticated-account",
+    "source_units": { "time": "s", "length": "in", "angle": "rad" },
+    "actuation": {
+      "profile": "constant-array",
+      "rpm": 15.1,
+      "speed_rad_s": 1.5812683023068625,
+      "profile_samples": 3600,
+      "sample_rate_hz": 60,
+      "graph_rows": 3601
+    },
+    "coordinate_transform": {
+      "spatial_scale": 3.3333333333333335,
+      "rotation": [[1, 0], [0, 1]],
+      "translation": [0.4566666666666652, 10.01]
+    },
+    "tolerance": {
+      "source_numeric_guard_fraction_of_ordinate_quantization": 0.05
+    },
+    "modeling_note": "The horizontal slot terminates at fixed pivot A. This is kinematically equivalent to extending the same grounded guide through A and avoids an overlapping hidden-link hit target when exporting A's graph."
+  },
+  "exclusions": [],
+  "motiongen_exclusions": [
+    {
+      "id": "motiongen-C-matlab-0090-tangential-undefined",
+      "sample_id": "matlab_0090",
+      "series": "joint:C:tangential_acceleration",
+      "input_angle_rad": 3.1415926535897807,
+      "source_speed": 9.479552871399516e-14,
+      "reason": "MotionGen exports signed tangential acceleration; at zero slider speed the tangent direction is undefined. Vector acceleration remains verified independently by MATLAB and PMKS."
+    },
+    {
+      "id": "motiongen-C-matlab-0270-tangential-undefined",
+      "sample_id": "matlab_0270",
+      "series": "joint:C:tangential_acceleration",
+      "input_angle_rad": 6.283185307179538,
+      "source_speed": 2.1700534601194943e-13,
+      "reason": "MotionGen exports signed tangential acceleration; at zero slider speed the tangent direction is undefined. Vector acceleration remains verified independently by MATLAB and PMKS."
+    }
+  ]
+}

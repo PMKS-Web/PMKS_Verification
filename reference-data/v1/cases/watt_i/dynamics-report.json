@@ -1,0 +1,18 @@
+{
+  "case_id": "watt_i",
+  "checked_rows": 46,
+  "maximum_scaled_residual": {
+    "force": 7.22953490007306e-17,
+    "moment": 3.254278046132363e-15,
+    "power": 2.1245378094728575e-15
+  },
+  "residual_limit": 1e-08,
+  "schema_version": 1,
+  "status": "pass",
+  "trust": "newton-euler-consistency",
+  "worst_location": {
+    "force": "newton_no_gravity:matlab_0011:EF",
+    "moment": "newton_no_gravity:matlab_0011:DE",
+    "power": "newton_no_gravity:matlab_0011"
+  }
+}
