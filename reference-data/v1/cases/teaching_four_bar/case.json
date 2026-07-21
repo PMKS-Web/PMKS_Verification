@@ -37,7 +37,7 @@
     "CDEI": { "mass": 4.901229, "inertia": 63343618.03601, "com_initial": [472.56, -20.8] }
   },
   "capabilities": { "joints": true, "points": true, "com": true, "links": true, "prismatic": false, "dynamics": false, "motiongen": true },
-  "trust": { "kinematics": "matlab-pmks-motiongen", "com": "diagnostic-only", "dynamics": "not-applicable", "motiongen": "matlab-pmks-motiongen" },
+  "trust": { "kinematics": "matlab-pmks-fork-motiongen", "com": "diagnostic-only", "dynamics": "not-applicable", "motiongen": "matlab-pmks-fork-motiongen" },
   "motiongen": {
     "app_version": "1.1.5",
     "model_url": "https://motiongen.io/core",

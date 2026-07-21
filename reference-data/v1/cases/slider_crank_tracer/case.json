@@ -31,6 +31,6 @@
     "BCD": { "mass": 10, "inertia": 0.2, "com_initial": [12, 1.3333333333333333] }
   },
   "capabilities": { "joints": true, "points": true, "com": true, "links": true, "prismatic": true, "dynamics": false, "motiongen": false },
-  "trust": { "kinematics": "matlab-pmks", "com": "matlab-pmks", "dynamics": "not-applicable", "motiongen": "not-applicable" },
+  "trust": { "kinematics": "matlab-pmks-fork", "com": "matlab-pmks-fork", "dynamics": "not-applicable", "motiongen": "not-applicable" },
   "exclusions": []
 }

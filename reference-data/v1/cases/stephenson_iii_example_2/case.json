@@ -51,6 +51,6 @@
     }
   },
   "capabilities": { "joints": true, "points": false, "com": true, "links": true, "prismatic": false, "dynamics": true, "motiongen": false },
-  "trust": { "kinematics": "matlab-pmks", "com": "matlab-pmks", "dynamics": "newton-euler-consistency", "motiongen": "not-applicable" },
+  "trust": { "kinematics": "matlab-pmks-fork", "com": "matlab-pmks-fork", "dynamics": "newton-euler-consistency", "motiongen": "not-applicable" },
   "exclusions": []
 }

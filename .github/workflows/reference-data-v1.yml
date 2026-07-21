@@ -16,7 +16,7 @@ concurrency:
 
 env:
   DOTNET_VERSION: 8.0.129
-  PMKS_COMMIT: 2a0a6fca957dd19844567702af663f607dc15dfe
+  PMKS_COMMIT: 644b26c75b07182ce04dc6466cfec74ee4130c93
 
 jobs:
   schema-and-pmks-build:
@@ -29,12 +29,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Check out pinned DesignEngrLab PMKS
+      - name: Check out pinned PMKS fork
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
-          repository: DesignEngrLab/PMKS
-          ref: 2a0a6fca957dd19844567702af663f607dc15dfe
+          repository: PMKS-Web/PMKS
+          ref: 644b26c75b07182ce04dc6466cfec74ee4130c93
           path: .external/PMKS
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Set up exact .NET 8 SDK
@@ -42,13 +43,13 @@ jobs:
         with:
           dotnet-version: 8.0.129
 
-      - name: Verify immutable upstream identity and MIT license
+      - name: Verify immutable fork identity and minimal delta
         shell: bash
         run: |
           test "$(git -C .external/PMKS rev-parse HEAD)" = "$PMKS_COMMIT"
+          git -C .external/PMKS merge-base --is-ancestor "$PMKS_COMMIT" refs/remotes/origin/master
+          python3 tools/validate_pmks_fork.py --pmks-root .external/PMKS
           git -C .external/PMKS diff --exit-code
-          test -f .external/PMKS/LICENSE
-          grep -q "MIT License" .external/PMKS/LICENSE
 
       - name: Validate manifests and contract unit tests
         run: |
@@ -123,12 +124,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Check out pinned DesignEngrLab PMKS
+      - name: Check out pinned PMKS fork
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
-          repository: DesignEngrLab/PMKS
-          ref: 2a0a6fca957dd19844567702af663f607dc15dfe
+          repository: PMKS-Web/PMKS
+          ref: 644b26c75b07182ce04dc6466cfec74ee4130c93
           path: .external/PMKS
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Set up exact .NET 8 SDK
@@ -136,10 +138,11 @@ jobs:
         with:
           dotnet-version: 8.0.129
 
-      - name: Build and run byte-unmodified PMKS source
+      - name: Build and run pinned PMKS fork
         shell: bash
         run: |
           test "$(git -C .external/PMKS rev-parse HEAD)" = "$PMKS_COMMIT"
+          python3 tools/validate_pmks_fork.py --pmks-root .external/PMKS
           project="$GITHUB_WORKSPACE/.external/PMKS/PlanarMechanismSimulator/PlanarMechanismKinematicSimulator.csproj"
           dotnet restore oracle/pmks/PmksOracle.csproj --locked-mode -p:PmksProject="$project"
           dotnet run --project oracle/pmks/PmksOracle.csproj --no-restore -c Release \
@@ -180,12 +183,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Check out pinned DesignEngrLab PMKS for provenance
+      - name: Check out pinned PMKS fork for provenance
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
-          repository: DesignEngrLab/PMKS
-          ref: 2a0a6fca957dd19844567702af663f607dc15dfe
+          repository: PMKS-Web/PMKS
+          ref: 644b26c75b07182ce04dc6466cfec74ee4130c93
           path: .external/PMKS
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Set up exact .NET identity
@@ -213,6 +217,7 @@ jobs:
           rsync -a artifacts/download/pmks/reference-data/v1/ artifacts/combined/reference-data/v1/
           cp -R reference-data/v1/schema artifacts/combined/reference-data/v1/schema
           cp reference-data/v1/README.md artifacts/combined/reference-data/v1/README.md
+          cp reference-data/v1/pmks-fork-delta.json artifacts/combined/reference-data/v1/
           while IFS= read -r motiongen; do
             relative=${motiongen#reference-data/v1/}
             mkdir -p "artifacts/combined/reference-data/v1/$(dirname "$relative")"

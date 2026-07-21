@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import Iterable, Iterator, Mapping, Sequence
 
 TRUST_LEVELS = {
-    "matlab-pmks",
-    "matlab-pmks-motiongen",
+    "matlab-pmks-fork",
+    "matlab-pmks-fork-motiongen",
     "newton-euler-consistency",
     "diagnostic-only",
     "not-applicable",

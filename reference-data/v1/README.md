@@ -1,8 +1,8 @@
 # Reference data v1
 
-Promotion is currently blocked by the pinned PMKS acceleration incompatibility documented in
-[FEASIBILITY.md](FEASIBILITY.md). The contract and generators remain candidate infrastructure;
-there is no trusted v1 baseline yet.
+The original PMKS acceleration incompatibility is closed by the pinned PMKS-Web fork described
+in [FEASIBILITY.md](FEASIBILITY.md). The contract and generators remain candidate infrastructure
+until a successful workflow artifact is promoted as the first trusted v1 baseline.
 
 This directory is the only supported machine-readable reference-data contract. Consumers must
 reject `legacy/reference-output` and the historical `Mechanisms/**/CSVOutput` layouts.
@@ -13,8 +13,8 @@ round-trip within one ULP or `1e-15 * max(1, |value|)`.
 
 Trust labels have deliberately narrow meanings:
 
-- `matlab-pmks`: vector kinematics agreed between the pinned MATLAB and PMKS implementations.
-- `matlab-pmks-motiongen`: the same result also has MotionGen position, scalar-derivative, and
+- `matlab-pmks-fork`: vector kinematics agreed between MATLAB and the pinned PMKS-Web/PMKS fork.
+- `matlab-pmks-fork-motiongen`: the same result also has MotionGen position, scalar-derivative, and
   angular corroboration under the source conventions recorded in the case manifest.
 - `newton-euler-consistency`: serialized MATLAB dynamics satisfy an independent equilibrium and
   power check; this is not an external dynamics oracle.

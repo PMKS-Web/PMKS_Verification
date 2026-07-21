@@ -1,15 +1,16 @@
 # PMKS Verification
 
 This repository produces the reviewed `reference-data/v1` contract used by PMKSWeb. A result is
-trusted only when the MATLAB implementation agrees with the byte-unmodified pinned
-[DesignEngrLab/PMKS](https://github.com/DesignEngrLab/PMKS) library, every eligible row aligns,
+trusted only when the MATLAB implementation agrees with the pinned
+[PMKS-Web/PMKS](https://github.com/PMKS-Web/PMKS) fork, every eligible row aligns,
 and every applicable independent check passes. There is no majority vote: an unexplained
 disagreement fails the pipeline.
 
 ## Pinned sources
 
 - MATLAB R2024a plus Symbolic Math Toolbox on `ubuntu-24.04`
-- DesignEngrLab/PMKS commit `2a0a6fca957dd19844567702af663f607dc15dfe`
+- PMKS-Web/PMKS commit `644b26c75b07182ce04dc6466cfec74ee4130c93`, based on
+  DesignEngrLab/PMKS `2a0a6fca957dd19844567702af663f607dc15dfe`
 - .NET SDK `8.0.129`
 - One-degree input increments and exact `rpm * pi / 30` speeds
 
@@ -45,22 +46,22 @@ requested.
 
 ## Local PMKS oracle
 
-Check out the exact upstream source without modifying it:
+Check out the exact merged fork revision:
 
 ```bash
-git clone https://github.com/DesignEngrLab/PMKS .external/PMKS
-git -C .external/PMKS checkout 2a0a6fca957dd19844567702af663f607dc15dfe
+git clone https://github.com/PMKS-Web/PMKS .external/PMKS
+git -C .external/PMKS checkout 644b26c75b07182ce04dc6466cfec74ee4130c93
 dotnet restore oracle/pmks/PmksOracle.csproj --locked-mode
 dotnet run --project oracle/pmks/PmksOracle.csproj -c Release -- \
   --cases-root reference-data/v1/cases \
   --output-root artifacts/candidate/reference-data/v1
 ```
 
-The adapter runs both speed signs. Upstream PMKS inserts full-cycle endpoints from concurrent
+The adapter runs both speed signs. PMKS inserts full-cycle endpoints from concurrent
 forward/backward tasks, so raw output can contain 362 or 363 rows. The reviewed adapter groups
 by exact one-degree input tick, deterministically collapses only duplicate ticks, and proves the
-canonical 360-row result is repeatable within the same-source tier. The upstream source is never
-patched.
+canonical 360-row result is repeatable within the same-source tier. The adapter never modifies
+the checked-out fork source.
 
 ## MATLAB candidate
 

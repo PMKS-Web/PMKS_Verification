@@ -11,8 +11,11 @@ from write_source_metadata import (
     MATLAB_REPOSITORY,
     PMKS_COMMIT,
     PMKS_REPOSITORY,
+    PMKS_UPSTREAM_COMMIT,
+    PMKS_UPSTREAM_REPOSITORY,
     matlab_files,
 )
+from validate_pmks_fork import validate as validate_pmks_fork
 
 
 def source_files(root: Path) -> list[Path]:
@@ -24,8 +27,13 @@ def source_files(root: Path) -> list[Path]:
 
 
 def validate(root: Path, repo: Path, pmks_root: Path) -> None:
+    fork = validate_pmks_fork(
+        pmks_root, repo / "reference-data" / "v1" / "pmks-fork-delta.json"
+    )
     adapter_hash = sha256_files(repo, source_files(repo / "oracle" / "pmks"))
-    upstream_hash = sha256_files(pmks_root, source_files(pmks_root / "PlanarMechanismSimulator"))
+    pmks_source_hash = sha256_files(
+        pmks_root, source_files(pmks_root / "PlanarMechanismSimulator")
+    )
     for case_root in case_directories(root):
         case_id = case_root.name
         matlab = load_json(case_root / "matlab" / "source-metadata.json")
@@ -42,8 +50,13 @@ def validate(root: Path, repo: Path, pmks_root: Path) -> None:
             "source_repository": PMKS_REPOSITORY,
             "source_commit": PMKS_COMMIT,
             "adapter_content_sha256": adapter_hash,
-            "upstream_source_tree_sha256": upstream_hash,
-            "license": "MIT",
+            "source_content_sha256": pmks_source_hash,
+            "source_tree_git": fork["source_tree_git"],
+            "upstream_repository": PMKS_UPSTREAM_REPOSITORY,
+            "upstream_base_commit": PMKS_UPSTREAM_COMMIT,
+            "upstream_base_tree_git": fork["upstream_base_tree_git"],
+            "fork_patch_sha256": fork["fork_patch_sha256"],
+            "fork_changed_files": fork["fork_changed_files"],
         }
         wrong = {key: (pmks.get(key), value) for key, value in expected.items() if pmks.get(key) != value}
         if wrong:

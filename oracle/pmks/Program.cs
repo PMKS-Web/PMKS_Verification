@@ -4,8 +4,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using PMKS;
 
-const string PmksRepository = "https://github.com/DesignEngrLab/PMKS";
-const string PmksCommit = "2a0a6fca957dd19844567702af663f607dc15dfe";
+const string PmksRepository = "https://github.com/PMKS-Web/PMKS";
+const string PmksCommit = "644b26c75b07182ce04dc6466cfec74ee4130c93";
+const string PmksUpstreamRepository = "https://github.com/DesignEngrLab/PMKS";
+const string PmksUpstreamCommit = "2a0a6fca957dd19844567702af663f607dc15dfe";
 var options = Arguments.Parse(args);
 var manifests = Directory.GetDirectories(options.CasesRoot)
     .Select(directory => Path.Combine(directory, "case.json"))
@@ -228,7 +230,8 @@ static void WriteCase(
         schema_version = 1,
         source_repository = PmksRepository,
         source_commit = PmksCommit,
-        license = "MIT",
+        upstream_repository = PmksUpstreamRepository,
+        upstream_base_commit = PmksUpstreamCommit,
         angle_increment_rad = manifest.Input.AngleIncrementRad,
         adaptive_smoothing = false,
         runs = new

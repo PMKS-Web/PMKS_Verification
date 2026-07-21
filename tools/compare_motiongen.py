@@ -269,7 +269,7 @@ def compare_case(case_root: Path, repo_root: Path) -> dict | None:
         "schema_version": 1,
         "case_id": manifest["case_id"],
         "status": "pass",
-        "trust": "matlab-pmks-motiongen",
+        "trust": "matlab-pmks-fork-motiongen",
         "compared_values": compared,
         "motiongen_cycles_compared": [cycle for cycle, _ in motion_cycles],
         "maximum_tolerance_ratio": maximum_ratio,

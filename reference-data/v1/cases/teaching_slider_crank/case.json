@@ -32,7 +32,7 @@
     "Piston": { "mass": 1.31788, "inertia": 0, "com_initial": [-0.97, 10.01] }
   },
   "capabilities": { "joints": true, "points": true, "com": true, "links": true, "prismatic": true, "dynamics": false, "motiongen": true },
-  "trust": { "kinematics": "matlab-pmks-motiongen", "com": "diagnostic-only", "dynamics": "not-applicable", "motiongen": "matlab-pmks-motiongen" },
+  "trust": { "kinematics": "matlab-pmks-fork-motiongen", "com": "diagnostic-only", "dynamics": "not-applicable", "motiongen": "matlab-pmks-fork-motiongen" },
   "motiongen": {
     "app_version": "1.1.5",
     "model_url": "https://motiongen.io/core",
