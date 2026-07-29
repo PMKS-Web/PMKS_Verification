@@ -96,6 +96,18 @@ switch caseName
             'A', 'CoM.AB';
             'B', 'CoM.BCD'};
 
+    case 'steep_slider_crank'
+        config.sourceDirectory = fullfile(repoRoot, 'Mechanisms', 'Four_Bar_Slider', 'Steep_Slider_Crank');
+        config.speedRpm = 10;
+        config.inputSpeed = config.speedRpm * pi / 30;
+        config.constraints = {
+            'A', 'B';
+            'B', 'C';
+            'B', 'D';
+            'C', 'D';
+            'A', 'CoM.AB';
+            'B', 'CoM.BCD'};
+
     otherwise
         error('Verification:UnknownCase', 'Unknown verification case: %s', caseName);
 end

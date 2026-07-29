@@ -191,6 +191,47 @@ Committed data must reproduce within the same-source tier. Failed candidates are
 a diagnostic artifact name and are never promoted. PMKSWeb may pin only a verification commit
 reachable from `PMKS_Verification/master`.
 
+## Adding a case
+
+A new case touches more than its own directory, and none of it fails informatively.
+In order:
+
+1. **MATLAB source** under `Mechanisms/`, and an entry in `verification/verification_case_definition.m`,
+   `verification/build_verification_case.m`, and the `caseNames` list in `verification/run_verification.m`.
+   A per-case regression gate in `verification/validate_verification_case.m` is optional but is what
+   stops a later edit silently neutering the case.
+2. **`reference-data/v1/cases/<id>/case.json`**, matching the schema. `trust` values must come from
+   `TRUST_LEVELS` in `tools/reference_data.py`; a stale label from an older case will be rejected.
+3. **Three hardcoded case registries**, each of which fails in a different job with a different
+   message: `EXPECTED_CASES` in `tools/validate_v1.py`, `expectedCases` in `oracle/pmks/Program.cs`,
+   and `SOURCE_DIRECTORIES` in `tools/write_source_metadata.py` (this one raises a bare `KeyError`).
+4. **Generated data**, per the two-phase promotion above.
+5. **Provenance for every *other* case.** `matlab_files()` hashes `CommonUtils/*.m` *and*
+   `verification/*.m` alongside the case's own folder, so editing the shared verification scripts —
+   which step 1 requires — invalidates the recorded source hash of every existing case. Expect to
+   update all per-case `source-metadata.json` files plus the root `reference-data/v1/source-metadata.json`,
+   which carries its own `cases` map.
+
+Two things that mislead while debugging a run:
+
+- `digest-mismatch: error` in the log is an *input parameter* of `download-artifact`, not a failure.
+- The PMKS oracle is not bit-reproducible across runs. Regenerated CSVs can differ from committed
+  ones by ~1e-13 on identical rows, which is inside the same-source tier and is tolerated by the
+  numeric comparison. Only the JSON metadata is compared exactly, so `diff -rq` overstates what
+  actually changed.
+
+The oracle half runs locally, which removes most blind CI iteration:
+
+```bash
+git clone https://github.com/DesignEngrLab/PMKS .external/PMKS
+git -C .external/PMKS checkout 2a0a6fca957dd19844567702af663f607dc15dfe
+dotnet run --project oracle/pmks/PmksOracle.csproj -c Release -- \
+  --cases-root reference-data/v1/cases --output-root artifacts/candidate/reference-data/v1
+python3 tools/validate_v1.py --require-sources
+```
+
+Only MATLAB genuinely requires the runner.
+
 ## Legacy and deferred scope
 
 Historical MAT/CSV output lives under `legacy/reference-output` and is not a supported input.

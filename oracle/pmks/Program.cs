@@ -17,8 +17,27 @@ var manifests = Directory.GetDirectories(options.CasesRoot)
     .OrderBy(manifest => manifest.CaseId)
     .ToArray();
 
-if (manifests.Length != 5)
-    throw new InvalidOperationException($"Expected five v1 cases, found {manifests.Length}.");
+// The exact case set the v1 contract covers. Named rather than counted: a bare
+// count says nothing about which case went missing, and has to be edited on every
+// addition anyway, so it may as well carry the information. Mirrors EXPECTED_CASES
+// in tools/validate_v1.py.
+var expectedCases = new SortedSet<string>(StringComparer.Ordinal)
+{
+    "slider_crank_tracer",
+    "steep_slider_crank",
+    "stephenson_iii_example_2",
+    "teaching_four_bar",
+    "teaching_slider_crank",
+    "watt_i",
+};
+var foundCases = new SortedSet<string>(manifests.Select(manifest => manifest.CaseId), StringComparer.Ordinal);
+if (!foundCases.SetEquals(expectedCases))
+{
+    var missing = string.Join(", ", expectedCases.Except(foundCases));
+    var unexpected = string.Join(", ", foundCases.Except(expectedCases));
+    throw new InvalidOperationException(
+        $"Case set does not match the contract. missing=[{missing}] unexpected=[{unexpected}]");
+}
 
 foreach (var manifest in manifests)
 {

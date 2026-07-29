@@ -111,6 +111,24 @@ switch config.name
             error('Verification:TracerDerivativeRegression', ...
                 'Slider tracer velocity or acceleration regressed to zero.');
         end
+
+    case 'steep_slider_crank'
+        % The point of this case is a guide steep enough to break a
+        % slope-intercept consumer. Flattening it would leave a case that still
+        % solves while covering nothing the horizontal cases do not.
+        guide = deg2rad(89.95);
+        travel = Mechanism.Joint.C(:, 1:2) - Mechanism.Joint.C(1, 1:2);
+        offGuide = travel * [-sin(guide); cos(guide)];
+        along = travel * [cos(guide); sin(guide)];
+        if max(abs(offGuide)) > 1e-6
+            error('Verification:SteepGuideRegression', ...
+                'Slider left its steep guide by %g.', max(abs(offGuide)));
+        end
+        if max(abs(along)) <= 1e-6
+            error('Verification:SteepGuideRegression', ...
+                'Slider did not travel along its guide.');
+        end
+
 end
 
 if any(diff(sign(Mechanism.inputSpeed(:, 1))) ~= 0)
