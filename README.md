@@ -143,6 +143,22 @@ cells observed as MotionGen null-to-zero conversions may otherwise be excluded.
 
 ## Validation commands
 
+`make help` lists the local entry points. The one worth knowing before you need it:
+
+```bash
+make refresh-hashes
+```
+
+Editing `CommonUtils/*.m`, `verification/*.m`, or `oracle/pmks/*` invalidates the recorded content
+hash of **every** case, including ones whose own source never moved: `matlab_files()` hashes the
+shared scripts alongside each case folder, and the adapter hash covers all of `oracle/pmks`. Without
+refreshing, that surfaces late — in a different CI job, naming an unrelated case. The target clones
+the pinned fork if needed, because `write_source_metadata.py` writes *null* PMKS provenance when
+`--pmks-root` is missing, which is worse than the problem it is solving.
+
+`make validate` runs the schema, case-set, trust-label, source-hash, and dynamics checks;
+`make oracle` runs the PMKS oracle; `make check` runs both.
+
 Given a complete candidate:
 
 ```bash
