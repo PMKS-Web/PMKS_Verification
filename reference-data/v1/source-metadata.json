@@ -1,7 +1,7 @@
 {
   "cases": {
     "slider_crank_tracer": {
-      "matlab_source_content_sha256": "93f63831841f868830d0e16a2147af0f249f6eeeb3c8ecb5940e5144e8d0a35f",
+      "matlab_source_content_sha256": "a1be5fd17f499cc3756d5a777acbe71650a64732b5fe901fbf0e86d80fbbd519",
       "pmks_adapter_content_sha256": "3e8a5815ae7111e625b2ccee59e425c606791d3ffdd0a224dbf8384b55f9a503",
       "pmks_fork_patch_sha256": "2efa0c156bd8acaa83f104738c841046eb46e1a19e8414044c1992753fbe2c6b",
       "pmks_source_content_sha256": "b11a84f6a4cc1d2bc5cf17a2849d498c9a130b93e5f697970da4f73923b00c51",
@@ -9,7 +9,7 @@
       "pmks_upstream_base_tree_git": "cd6b654909094e05b0938f863c3b6f3d1ae166a6"
     },
     "stephenson_iii_example_2": {
-      "matlab_source_content_sha256": "43033d93a6a62077812bc278c150e458fe61e0b9863840eb8bd1ddf633f7f1fc",
+      "matlab_source_content_sha256": "766c369e65cdf56f6f2bbad912449bcff08e13a94727c76070b0544da1f5c7bd",
       "pmks_adapter_content_sha256": "3e8a5815ae7111e625b2ccee59e425c606791d3ffdd0a224dbf8384b55f9a503",
       "pmks_fork_patch_sha256": "2efa0c156bd8acaa83f104738c841046eb46e1a19e8414044c1992753fbe2c6b",
       "pmks_source_content_sha256": "b11a84f6a4cc1d2bc5cf17a2849d498c9a130b93e5f697970da4f73923b00c51",
@@ -17,7 +17,7 @@
       "pmks_upstream_base_tree_git": "cd6b654909094e05b0938f863c3b6f3d1ae166a6"
     },
     "teaching_four_bar": {
-      "matlab_source_content_sha256": "1a9c3702a33c7bc48d4e0911f0628e719133c95fecfb075e3458d8a8c6867372",
+      "matlab_source_content_sha256": "3a897d62f857d8233aa09ceba0f9c5b26d5885ebcccbdf4032feac85e60f850a",
       "pmks_adapter_content_sha256": "3e8a5815ae7111e625b2ccee59e425c606791d3ffdd0a224dbf8384b55f9a503",
       "pmks_fork_patch_sha256": "2efa0c156bd8acaa83f104738c841046eb46e1a19e8414044c1992753fbe2c6b",
       "pmks_source_content_sha256": "b11a84f6a4cc1d2bc5cf17a2849d498c9a130b93e5f697970da4f73923b00c51",
@@ -25,7 +25,7 @@
       "pmks_upstream_base_tree_git": "cd6b654909094e05b0938f863c3b6f3d1ae166a6"
     },
     "teaching_slider_crank": {
-      "matlab_source_content_sha256": "6ec594aae7acd33741bbba074ecc3a60460de834fbac089d904ad086d4c9e5d6",
+      "matlab_source_content_sha256": "0fcb48da9eb83f383bc8bbb2827c6512171221f180b48bc76b33207951b3ef37",
       "pmks_adapter_content_sha256": "3e8a5815ae7111e625b2ccee59e425c606791d3ffdd0a224dbf8384b55f9a503",
       "pmks_fork_patch_sha256": "2efa0c156bd8acaa83f104738c841046eb46e1a19e8414044c1992753fbe2c6b",
       "pmks_source_content_sha256": "b11a84f6a4cc1d2bc5cf17a2849d498c9a130b93e5f697970da4f73923b00c51",
@@ -33,7 +33,7 @@
       "pmks_upstream_base_tree_git": "cd6b654909094e05b0938f863c3b6f3d1ae166a6"
     },
     "watt_i": {
-      "matlab_source_content_sha256": "e3294c11a1e49f188fd09d09c95cbfb50c6839e71120d3e8e95ab9d4e01b155c",
+      "matlab_source_content_sha256": "505d75eb3b260c6727a6cfcf3f6af57fa7fb25cbad96a99106f73b79029de080",
       "pmks_adapter_content_sha256": "3e8a5815ae7111e625b2ccee59e425c606791d3ffdd0a224dbf8384b55f9a503",
       "pmks_fork_patch_sha256": "2efa0c156bd8acaa83f104738c841046eb46e1a19e8414044c1992753fbe2c6b",
       "pmks_source_content_sha256": "b11a84f6a4cc1d2bc5cf17a2849d498c9a130b93e5f697970da4f73923b00c51",

@@ -77,11 +77,52 @@ jobs:
       - name: Verify no source mutation
         run: git diff --exit-code
 
-  matlab-candidate:
-    name: MATLAB R2024a candidate
+  # The shard list comes from the filesystem so the matrix cannot drift out of
+  # sync with the contract: adding a case directory adds a shard, with no fourth
+  # registry to forget.
+  enumerate-cases:
+    name: Enumerate verification cases
     needs: schema-and-pmks-build
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      cases: ${{ steps.list.outputs.cases }}
+    steps:
+      - name: Check out tested source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+
+      - name: List case directories
+        id: list
+        shell: bash
+        run: |
+          cases=$(ls -1 reference-data/v1/cases | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          if [ "$(jq -r 'length' <<<"$cases")" -eq 0 ]; then
+            echo "::error::No verification cases found under reference-data/v1/cases"
+            exit 1
+          fi
+          echo "cases=$cases" >> "$GITHUB_OUTPUT"
+          echo "Sharding MATLAB across: $cases"
+
+  matlab-candidate:
+    # One runner per case. Cases are independent by construction -- each gets its
+    # own scratch directory and clears the previous case's functions before
+    # running -- so this is a scheduling change, not a semantic one, and it gives
+    # stronger isolation than sharing one MATLAB session across every case.
+    #
+    # It also stops wall time growing with the case count: the job costs the
+    # slowest single case rather than the sum of all of them.
+    name: MATLAB R2024a candidate (${{ matrix.case }})
+    needs: [schema-and-pmks-build, enumerate-cases]
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
+    strategy:
+      # Every failing case should be visible in one run; cancelling siblings
+      # would hide a second failure behind the first.
+      fail-fast: false
+      matrix:
+        case: ${{ fromJSON(needs.enumerate-cases.outputs.cases) }}
     steps:
       - name: Check out tested source
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -98,7 +139,7 @@ jobs:
       - name: Generate MATLAB v1 source tables from clean definitions
         uses: matlab-actions/run-command@bcd446a219949c24051c1d04a4b4e0274c42f23b # v3
         with:
-          command: addpath(fullfile(pwd, 'verification')); run_verification(fullfile(pwd, 'artifacts', 'candidate', 'reference-data', 'v1'))
+          command: addpath(fullfile(pwd, 'verification')); run_verification(fullfile(pwd, 'artifacts', 'candidate', 'reference-data', 'v1'), {'${{ matrix.case }}'})
 
       - name: Reject legacy output and tracked mutations
         shell: bash
@@ -113,10 +154,10 @@ jobs:
           fi
           git diff --exit-code
 
-      - name: Upload MATLAB candidate
+      - name: Upload MATLAB candidate shard
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: matlab-candidate-${{ github.run_id }}
+          name: matlab-candidate-${{ github.run_id }}-${{ matrix.case }}
           path: artifacts/candidate
           if-no-files-found: error
           retention-days: 30
@@ -125,7 +166,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: failed-matlab-candidate-${{ github.run_id }}
+          name: failed-matlab-candidate-${{ github.run_id }}-${{ matrix.case }}
           path: artifacts/candidate
           if-no-files-found: warn
           retention-days: 30
@@ -214,11 +255,37 @@ jobs:
         with:
           dotnet-version: 8.0.129
 
-      - name: Download MATLAB candidate
+      - name: Download MATLAB candidate shards
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: matlab-candidate-${{ github.run_id }}
-          path: artifacts/download/matlab
+          pattern: matlab-candidate-${{ github.run_id }}-*
+          path: artifacts/download/matlab-shards
+
+      - name: Merge MATLAB candidate shards
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/download/matlab/reference-data/v1/cases
+
+          # Case directories are disjoint by construction -- one shard per case --
+          # so refuse to overwrite rather than silently accepting an overlap.
+          for shard in artifacts/download/matlab-shards/*/reference-data/v1/cases/*; do
+            destination="artifacts/download/matlab/reference-data/v1/cases/$(basename "$shard")"
+            if [ -e "$destination" ]; then
+              echo "::error::Two MATLAB shards produced $(basename "$shard")"
+              exit 1
+            fi
+            cp -R "$shard" "$destination"
+          done
+
+          # Each shard wrote a run report covering only its own cases.
+          python3 tools/merge_matlab_reports.py \
+            --reports artifacts/download/matlab-shards/*/reference-data/run-report.json \
+            --output artifacts/download/matlab/reference-data/run-report.json \
+            --cases-root reference-data/v1/cases
+
+          echo "Merged case set:"
+          ls -1 artifacts/download/matlab/reference-data/v1/cases
 
       - name: Download PMKS candidate
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
