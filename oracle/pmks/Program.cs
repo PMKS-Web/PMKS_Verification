@@ -10,15 +10,51 @@ const string PmksUpstreamRepository = "https://github.com/DesignEngrLab/PMKS";
 const string PmksUpstreamCommit = "2a0a6fca957dd19844567702af663f607dc15dfe";
 const double PmksRepeatabilityRelativeTolerance = 8e-12;
 var options = Arguments.Parse(args);
-var manifests = Directory.GetDirectories(options.CasesRoot)
-    .Select(directory => Path.Combine(directory, "case.json"))
-    .Where(File.Exists)
-    .Select(LoadManifest)
-    .OrderBy(manifest => manifest.CaseId)
+var manifestsByDirectory = Directory.GetDirectories(options.CasesRoot)
+    .Select(directory => (Directory: directory, Manifest: Path.Combine(directory, "case.json")))
+    .Where(entry => File.Exists(entry.Manifest))
+    .Select(entry => (Name: Path.GetFileName(entry.Directory), Manifest: LoadManifest(entry.Manifest)))
+    .OrderBy(entry => entry.Manifest.CaseId)
     .ToArray();
 
-if (manifests.Length != 5)
-    throw new InvalidOperationException($"Expected five v1 cases, found {manifests.Length}.");
+// case_id must match its directory name, mirroring the identity check in
+// validate_v1.py. That check is what makes case ids unique here: directory names
+// already are, so tying the id to the directory rules out two cases declaring the
+// same id. Without it the SetEquals below would accept a duplicate -- every
+// expected id present, one of them twice -- and the oracle would then generate
+// that case twice and overwrite its own output.
+foreach (var (name, manifest) in manifestsByDirectory)
+{
+    if (!string.Equals(manifest.CaseId, name, StringComparison.Ordinal))
+    {
+        throw new InvalidOperationException(
+            $"Case identity mismatch: directory '{name}' declares case_id '{manifest.CaseId}'.");
+    }
+}
+
+var manifests = manifestsByDirectory.Select(entry => entry.Manifest).ToArray();
+
+// The exact case set the v1 contract covers. Named rather than counted: a bare
+// count says nothing about which case went missing, and has to be edited on every
+// addition anyway, so it may as well carry the information. Mirrors EXPECTED_CASES
+// in tools/validate_v1.py.
+var expectedCases = new SortedSet<string>(StringComparer.Ordinal)
+{
+    "slider_crank_tracer",
+    "steep_slider_crank",
+    "stephenson_iii_example_2",
+    "teaching_four_bar",
+    "teaching_slider_crank",
+    "watt_i",
+};
+var foundCases = new SortedSet<string>(manifests.Select(manifest => manifest.CaseId), StringComparer.Ordinal);
+if (!foundCases.SetEquals(expectedCases))
+{
+    var missing = string.Join(", ", expectedCases.Except(foundCases));
+    var unexpected = string.Join(", ", foundCases.Except(expectedCases));
+    throw new InvalidOperationException(
+        $"Case set does not match the contract. missing=[{missing}] unexpected=[{unexpected}]");
+}
 
 foreach (var manifest in manifests)
 {

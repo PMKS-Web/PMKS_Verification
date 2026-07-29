@@ -192,6 +192,19 @@ def validate_json_schema(value: object, schema: dict, location: str) -> None:
                 raise ContractError(f"{location}: unexpected fields: {extra}")
 
 
+# The exact case set the v1 contract covers. Named rather than counted: a bare
+# count says nothing about *which* case went missing, and has to be edited on
+# every addition anyway, so it may as well carry the information.
+EXPECTED_CASES = {
+    "watt_i",
+    "stephenson_iii_example_2",
+    "teaching_four_bar",
+    "teaching_slider_crank",
+    "slider_crank_tracer",
+    "steep_slider_crank",
+}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path("reference-data/v1"))
@@ -199,8 +212,13 @@ def main() -> None:
     arguments = parser.parse_args()
     reject_legacy(arguments.root)
     cases = case_directories(arguments.root)
-    if len(cases) != 5:
-        raise ContractError(f"Expected five cases, found {len(cases)}")
+    found = {case.name for case in cases}
+    if found != EXPECTED_CASES:
+        missing = sorted(EXPECTED_CASES - found)
+        unexpected = sorted(found - EXPECTED_CASES)
+        raise ContractError(
+            f"Case set does not match the contract. missing={missing} unexpected={unexpected}"
+        )
     for case in cases:
         validate_case(case, arguments.require_sources)
         print(f"PASS schema/coverage: {case.name}")

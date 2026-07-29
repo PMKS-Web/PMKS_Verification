@@ -79,24 +79,48 @@ The runner copies source into an empty scratch directory, builds every case from
 definitions, runs solver-specific regression gates, and writes only v1 CSV. Scratch
 `Mechanism.mat` files never enter the candidate.
 
-Pass a case list to run a subset:
+### Running MATLAB without a licence
 
-```matlab
-run_verification(outputRoot, {'watt_i', 'teaching_four_bar'});
+**You do not need a MATLAB licence, or MATLAB installed, to add or change a case.** The
+`MATLAB R2024a candidate` job is the only part of the pipeline that genuinely requires MATLAB, and
+it runs on GitHub-hosted runners under MathWorks' own actions:
+
+```yaml
+- name: Set up MATLAB R2024a
+  uses: matlab-actions/setup-matlab@<pinned sha>   # v3
+  with:
+    release: R2024a
+    products: Symbolic_Math_Toolbox
+    cache: true
+
+- name: Generate MATLAB v1 source tables from clean definitions
+  uses: matlab-actions/run-command@<pinned sha>    # v3
+  with:
+    command: addpath(fullfile(pwd, 'verification')); run_verification(...)
 ```
 
-CI uses that to put **one case on one runner**. Cases were already independent — each gets its own
-scratch directory and clears the previous case's functions before running — so sharding is a
-scheduling change rather than a semantic one, and it isolates cases more strictly than sharing a
-single MATLAB session did.
+`setup-matlab` installs MATLAB and the Symbolic Math Toolbox on the runner; `run-command` then
+executes in batch mode against it. On a **public** repository this needs no licence and no secret —
+nothing to configure, no `MLM_LICENSE_FILE`, no login, no self-hosted runner. `cache: true` keeps
+the installation between runs, which is most of why the job takes about seven minutes rather than
+twenty.
 
-The shard list is read from `reference-data/v1/cases`, so adding a case adds a runner with no
-registry to update. Each shard writes a run report covering only its own cases;
-`tools/merge_matlab_reports.py` combines them and fails if two shards disagree on the MATLAB
-version or product list, if a case appears twice, or if the shards do not cover the contract.
+Consequences worth planning around:
 
-The practical effect is that MATLAB wall time is now the *slowest single case* rather than the sum
-of all of them, so it no longer grows as cases are added.
+- **This depends on the repository staying public.** A private repository, or a fork with Actions
+  disabled, needs a MathWorks batch licence supplied as a secret instead. If this repo is ever made
+  private, that job is the first thing to break.
+- **The runner is the only MATLAB oracle here.** There is no local fallback, so a contributor
+  without MATLAB cannot pre-check the MATLAB half directly — push the branch and read the log.
+- **Everything else runs locally**, and is worth exhausting before spending a CI cycle. See
+  [Validation commands](#validation-commands) and [Local PMKS oracle](#local-pmks-oracle): the PMKS
+  oracle, the schema and provenance validators, the dynamics checker, and the perturbation tests all
+  run on a laptop. The common failures — a missing case-registry entry, a stale content hash after
+  editing shared `verification/*.m` — are caught there in seconds rather than after a full run.
+- **A partial pre-check of the MATLAB half is still possible** without the toolbox, by porting the
+  case's own solver steps and asserting the properties the case exists for: closure, coupler-length
+  drift, and whatever geometric invariant the case is about. That produces no candidate, but it does
+  tell you the geometry is sane before you spend the seven minutes finding out.
 
 ## MotionGen evidence
 
@@ -143,22 +167,6 @@ cells observed as MotionGen null-to-zero conversions may otherwise be excluded.
 
 ## Validation commands
 
-`make help` lists the local entry points. The one worth knowing before you need it:
-
-```bash
-make refresh-hashes
-```
-
-Editing `CommonUtils/*.m`, `verification/*.m`, or `oracle/pmks/*` invalidates the recorded content
-hash of **every** case, including ones whose own source never moved: `matlab_files()` hashes the
-shared scripts alongside each case folder, and the adapter hash covers all of `oracle/pmks`. Without
-refreshing, that surfaces late — in a different CI job, naming an unrelated case. The target clones
-the pinned fork if needed, because `write_source_metadata.py` writes *null* PMKS provenance when
-`--pmks-root` is missing, which is worse than the problem it is solving.
-
-`make validate` runs the schema, case-set, trust-label, source-hash, and dynamics checks;
-`make oracle` runs the PMKS oracle; `make check` runs both.
-
 Given a complete candidate:
 
 ```bash
@@ -190,6 +198,66 @@ Promotion is deliberately two-phase:
 Committed data must reproduce within the same-source tier. Failed candidates are uploaded under
 a diagnostic artifact name and are never promoted. PMKSWeb may pin only a verification commit
 reachable from `PMKS_Verification/master`.
+
+## Adding a case
+
+A new case touches more than its own directory, and none of it fails informatively.
+In order:
+
+1. **MATLAB source** under `Mechanisms/`, and an entry in `verification/verification_case_definition.m`,
+   `verification/build_verification_case.m`, and the `caseNames` list in `verification/run_verification.m`.
+   A per-case regression gate in `verification/validate_verification_case.m` is optional but is what
+   stops a later edit silently neutering the case.
+2. **`reference-data/v1/cases/<id>/case.json`**, matching the schema. `trust` values must come from
+   `TRUST_LEVELS` in `tools/reference_data.py`; a stale label from an older case will be rejected.
+3. **Three hardcoded case registries**, each of which fails in a different job with a different
+   message: `EXPECTED_CASES` in `tools/validate_v1.py`, `expectedCases` in `oracle/pmks/Program.cs`,
+   and `SOURCE_DIRECTORIES` in `tools/write_source_metadata.py` (this one raises a bare `KeyError`).
+4. **Generated data**, per the two-phase promotion above.
+5. **Provenance for every *other* case.** `matlab_files()` hashes `CommonUtils/*.m` *and*
+   `verification/*.m` alongside the case's own folder, so editing the shared verification scripts —
+   which step 1 requires — invalidates the recorded source hash of every existing case. Expect to
+   update all per-case `source-metadata.json` files plus the root `reference-data/v1/source-metadata.json`,
+   which carries its own `cases` map.
+
+Two things that mislead while debugging a run:
+
+- `digest-mismatch: error` in the log is an *input parameter* of `download-artifact`, not a failure.
+- The PMKS oracle is not bit-reproducible across runs. Regenerated CSVs can differ from committed
+  ones by ~1e-13 on identical rows, which is inside the same-source tier and is tolerated by the
+  numeric comparison. Only the JSON metadata is compared exactly, so `diff -rq` overstates what
+  actually changed.
+
+The oracle half runs locally, which removes most blind CI iteration:
+
+```bash
+# The pinned PMKS-Web fork, not DesignEngrLab upstream. The oracle and every
+# recorded pmks_source_content_sha256 are the fork at this commit; building
+# against unpatched upstream silently produces numbers CI will not reproduce.
+git clone https://github.com/PMKS-Web/PMKS .external/PMKS
+git -C .external/PMKS checkout 644b26c75b07182ce04dc6466cfec74ee4130c93
+
+# Prints PMKS_ORACLE=PASS on success. That line is the local gate: the oracle
+# runs its own positive/negative sweep per case and fails if either direction
+# disagrees.
+dotnet run --project oracle/pmks/PmksOracle.csproj -c Release -- \
+  --cases-root reference-data/v1/cases --output-root artifacts/candidate/reference-data/v1
+
+# Checks the COMMITTED contract. --root defaults to reference-data/v1, so this
+# does not look at the candidate just generated and a broken candidate cannot
+# make it fail. Run it for what it does catch: schema, case-set membership,
+# trust labels, and stale content hashes after editing shared sources.
+python3 tools/validate_v1.py --require-sources
+```
+
+**Nothing local compares the candidate against the committed tables.** `compare_baseline.py`
+requires a *combined* MATLAB + PMKS candidate — it asserts the whole baseline file set is present,
+so an oracle-only candidate fails immediately on every missing `matlab/` path rather than on any
+numeric difference. Building that combined tree needs the MATLAB job, so the numeric
+MATLAB-versus-PMKS comparison is genuinely CI-only. Locally, `PMKS_ORACLE=PASS` plus a clean
+`validate_v1.py` is as far as you can get.
+
+Only MATLAB genuinely requires the runner.
 
 ## Legacy and deferred scope
 

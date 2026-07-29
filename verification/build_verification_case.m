@@ -12,6 +12,8 @@ switch char(caseName)
         Mechanism = buildTeachingSliderCrank();
     case 'slider_crank_tracer'
         Mechanism = buildSliderCrankTracer();
+    case 'steep_slider_crank'
+        Mechanism = buildSteepSliderCrank();
     otherwise
         error('Verification:UnknownCase', 'Unknown verification case: %s', caseName);
 end
@@ -135,4 +137,32 @@ end
 
 function value = angleVector(point, anchor)
 value = [0, 0, rad2deg(atan2(point(2) - anchor(2), point(1) - anchor(1)))];
+end
+
+
+function Mechanism = buildSteepSliderCrank()
+% The same slider-crank tracer geometry on a guide 0.05 degrees off vertical.
+%
+% Every other v1 slider case runs on a horizontal guide, so nothing exercised a
+% track steep enough to break a slope-intercept consumer: PMKSWeb clamped
+% any slope above 1000 and fell back to holding x constant, which is correct only
+% when the guide is exactly vertical. tan(89.95 deg) is 1145.9, just inside that
+% band. MATLAB solves it cleanly - the guide passes through the origin, so the
+% intercept stays at machine zero.
+guide = deg2rad(89.95);
+rotation = [cos(guide), -sin(guide); sin(guide), cos(guide)];
+place = @(point) [(rotation * point(:))', 0];
+
+A = place([0; 0]);
+B = place([4; 2]);
+C = place([12; 0]);
+D = place([20; 2]);
+
+Mechanism = baseMechanism(struct('A', A, 'B', B, 'C', C));
+Mechanism.TracerPoint = struct('D', D);
+Mechanism.LinkCoM.AB = GeneralUtils.determineCoM([A; B]);
+Mechanism.LinkCoM.BCD = GeneralUtils.determineCoM([B; C; D]);
+Mechanism.Mass = struct('AB', 5, 'BCD', 10, 'Piston', 1);
+Mechanism.MassMoI = struct('AB', 0.1, 'BCD', 0.2);
+Mechanism = addLinkAngles(Mechanism, struct('AB', 'A', 'BCD', 'B'));
 end

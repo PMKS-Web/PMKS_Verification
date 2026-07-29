@@ -24,6 +24,7 @@ SOURCE_DIRECTORIES = {
     "teaching_four_bar": Path("Mechanisms/Four_Bar_Mechanism/TeachingLab_Four_Bar"),
     "teaching_slider_crank": Path("Mechanisms/Four_Bar_Slider/TeachingLab_Slider_Crank"),
     "slider_crank_tracer": Path("Mechanisms/Four_Bar_Slider/Slider_Crank_Tracer_Point"),
+    "steep_slider_crank": Path("Mechanisms/Four_Bar_Slider/Steep_Slider_Crank"),
 }
 
 
