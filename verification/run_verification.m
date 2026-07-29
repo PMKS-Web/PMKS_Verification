@@ -1,8 +1,17 @@
-function summaries = run_verification(outputRoot)
+function summaries = run_verification(outputRoot, selectedCases)
 %RUN_VERIFICATION Regenerate and validate MATLAB source tables for v1.
 %
 % The runner copies only MATLAB source into an empty scratch directory. It
 % never reads committed Mechanism.mat files or prior CSV output.
+%
+% RUN_VERIFICATION(OUTPUTROOT) runs every case, which is what a local
+% regeneration wants.
+%
+% RUN_VERIFICATION(OUTPUTROOT, SELECTEDCASES) runs only the named cases so CI can
+% shard them across runners. Cases are already independent -- each gets its own
+% scratch directory and clears the previous case's functions before running -- so
+% a subset produces byte-identical output for the cases it covers. Its run report
+% then describes only that subset, and the shards are merged downstream.
 
 verificationDirectory = fileparts(mfilename('fullpath'));
 repoRoot = fileparts(verificationDirectory);
@@ -22,6 +31,21 @@ caseNames = {
     'teaching_four_bar', ...
     'teaching_slider_crank', ...
     'slider_crank_tracer'};
+
+if nargin >= 2 && ~isempty(selectedCases)
+    if ischar(selectedCases) || isstring(selectedCases)
+        selectedCases = cellstr(selectedCases);
+    end
+    selectedCases = cellfun(@char, selectedCases, 'UniformOutput', false);
+    unknown = setdiff(selectedCases, caseNames);
+    if ~isempty(unknown)
+        error('Verification:UnknownCase', ...
+            'Unknown verification case(s): %s', strjoin(unknown, ', '));
+    end
+    % Filter rather than reorder, so a shard's output cannot depend on the order
+    % its names happened to be passed in.
+    caseNames = caseNames(ismember(caseNames, selectedCases));
+end
 
 summaries = struct([]);
 for i = 1:numel(caseNames)
@@ -47,7 +71,7 @@ runReport.generatedAtUtc = char(datetime('now', 'TimeZone', 'UTC', 'Format', 'yy
 runReport.cases = summaries;
 writeJson(fullfile(fileparts(outputRoot), 'run-report.json'), runReport);
 
-fprintf('All %d verification cases passed.\n', numel(caseNames));
+fprintf('All %d verification cases passed: %s\n', numel(caseNames), strjoin(caseNames, ', '));
 end
 
 function summary = runOneCase(caseName, repoRoot, outputRoot)

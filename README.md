@@ -75,9 +75,28 @@ addpath(fullfile(pwd, 'verification'));
 run_verification(fullfile(pwd, 'artifacts', 'candidate', 'reference-data', 'v1'));
 ```
 
-The runner copies source into an empty scratch directory, builds all five cases from explicit
+The runner copies source into an empty scratch directory, builds every case from explicit
 definitions, runs solver-specific regression gates, and writes only v1 CSV. Scratch
 `Mechanism.mat` files never enter the candidate.
+
+Pass a case list to run a subset:
+
+```matlab
+run_verification(outputRoot, {'watt_i', 'teaching_four_bar'});
+```
+
+CI uses that to put **one case on one runner**. Cases were already independent — each gets its own
+scratch directory and clears the previous case's functions before running — so sharding is a
+scheduling change rather than a semantic one, and it isolates cases more strictly than sharing a
+single MATLAB session did.
+
+The shard list is read from `reference-data/v1/cases`, so adding a case adds a runner with no
+registry to update. Each shard writes a run report covering only its own cases;
+`tools/merge_matlab_reports.py` combines them and fails if two shards disagree on the MATLAB
+version or product list, if a case appears twice, or if the shards do not cover the contract.
+
+The practical effect is that MATLAB wall time is now the *slowest single case* rather than the sum
+of all of them, so it no longer grows as cases are added.
 
 ## MotionGen evidence
 
