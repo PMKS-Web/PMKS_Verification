@@ -79,24 +79,48 @@ The runner copies source into an empty scratch directory, builds every case from
 definitions, runs solver-specific regression gates, and writes only v1 CSV. Scratch
 `Mechanism.mat` files never enter the candidate.
 
-Pass a case list to run a subset:
+### Running MATLAB without a licence
 
-```matlab
-run_verification(outputRoot, {'watt_i', 'teaching_four_bar'});
+**You do not need a MATLAB licence, or MATLAB installed, to add or change a case.** The
+`MATLAB R2024a candidate` job is the only part of the pipeline that genuinely requires MATLAB, and
+it runs on GitHub-hosted runners under MathWorks' own actions:
+
+```yaml
+- name: Set up MATLAB R2024a
+  uses: matlab-actions/setup-matlab@<pinned sha>   # v3
+  with:
+    release: R2024a
+    products: Symbolic_Math_Toolbox
+    cache: true
+
+- name: Generate MATLAB v1 source tables from clean definitions
+  uses: matlab-actions/run-command@<pinned sha>    # v3
+  with:
+    command: addpath(fullfile(pwd, 'verification')); run_verification(...)
 ```
 
-CI uses that to put **one case on one runner**. Cases were already independent — each gets its own
-scratch directory and clears the previous case's functions before running — so sharding is a
-scheduling change rather than a semantic one, and it isolates cases more strictly than sharing a
-single MATLAB session did.
+`setup-matlab` installs MATLAB and the Symbolic Math Toolbox on the runner; `run-command` then
+executes in batch mode against it. On a **public** repository this needs no licence and no secret —
+nothing to configure, no `MLM_LICENSE_FILE`, no login, no self-hosted runner. `cache: true` keeps
+the installation between runs, which is most of why the job takes about seven minutes rather than
+twenty.
 
-The shard list is read from `reference-data/v1/cases`, so adding a case adds a runner with no
-registry to update. Each shard writes a run report covering only its own cases;
-`tools/merge_matlab_reports.py` combines them and fails if two shards disagree on the MATLAB
-version or product list, if a case appears twice, or if the shards do not cover the contract.
+Consequences worth planning around:
 
-The practical effect is that MATLAB wall time is now the *slowest single case* rather than the sum
-of all of them, so it no longer grows as cases are added.
+- **This depends on the repository staying public.** A private repository, or a fork with Actions
+  disabled, needs a MathWorks batch licence supplied as a secret instead. If this repo is ever made
+  private, that job is the first thing to break.
+- **The runner is the only MATLAB oracle here.** There is no local fallback, so a contributor
+  without MATLAB cannot pre-check the MATLAB half directly — push the branch and read the log.
+- **Everything else runs locally**, and is worth exhausting before spending a CI cycle. See
+  [Validation commands](#validation-commands) and [Local PMKS oracle](#local-pmks-oracle): the PMKS
+  oracle, the schema and provenance validators, the dynamics checker, and the perturbation tests all
+  run on a laptop. The common failures — a missing case-registry entry, a stale content hash after
+  editing shared `verification/*.m` — are caught there in seconds rather than after a full run.
+- **A partial pre-check of the MATLAB half is still possible** without the toolbox, by porting the
+  case's own solver steps and asserting the properties the case exists for: closure, coupler-length
+  drift, and whatever geometric invariant the case is about. That produces no candidate, but it does
+  tell you the geometry is sane before you spend the seven minutes finding out.
 
 ## MotionGen evidence
 
@@ -142,22 +166,6 @@ angles include quantization from both the current and initial rows. Only named t
 cells observed as MotionGen null-to-zero conversions may otherwise be excluded.
 
 ## Validation commands
-
-`make help` lists the local entry points. The one worth knowing before you need it:
-
-```bash
-make refresh-hashes
-```
-
-Editing `CommonUtils/*.m`, `verification/*.m`, or `oracle/pmks/*` invalidates the recorded content
-hash of **every** case, including ones whose own source never moved: `matlab_files()` hashes the
-shared scripts alongside each case folder, and the adapter hash covers all of `oracle/pmks`. Without
-refreshing, that surfaces late — in a different CI job, naming an unrelated case. The target clones
-the pinned fork if needed, because `write_source_metadata.py` writes *null* PMKS provenance when
-`--pmks-root` is missing, which is worse than the problem it is solving.
-
-`make validate` runs the schema, case-set, trust-label, source-hash, and dynamics checks;
-`make oracle` runs the PMKS oracle; `make check` runs both.
 
 Given a complete candidate:
 
