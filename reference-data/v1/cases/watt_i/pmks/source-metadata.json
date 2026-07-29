@@ -1,5 +1,5 @@
 {
-  "adapter_content_sha256": "648b815ae56d70a7a9f6bce206e51cb61a5c6c8c72c9e860a48f49984dada08f",
+  "adapter_content_sha256": "340941f7e82ecf78328cbc02cebd092d1521404e00b31866854b18bdc0d3ebcd",
   "adaptive_smoothing": false,
   "angle_increment_rad": 0.017453292519943295,
   "canonicalization": "Group by exact one-degree input tick, collapse race-sensitive endpoint duplicates, normalize link angles for repeatability checks.",

@@ -10,12 +10,29 @@ const string PmksUpstreamRepository = "https://github.com/DesignEngrLab/PMKS";
 const string PmksUpstreamCommit = "2a0a6fca957dd19844567702af663f607dc15dfe";
 const double PmksRepeatabilityRelativeTolerance = 8e-12;
 var options = Arguments.Parse(args);
-var manifests = Directory.GetDirectories(options.CasesRoot)
-    .Select(directory => Path.Combine(directory, "case.json"))
-    .Where(File.Exists)
-    .Select(LoadManifest)
-    .OrderBy(manifest => manifest.CaseId)
+var manifestsByDirectory = Directory.GetDirectories(options.CasesRoot)
+    .Select(directory => (Directory: directory, Manifest: Path.Combine(directory, "case.json")))
+    .Where(entry => File.Exists(entry.Manifest))
+    .Select(entry => (Name: Path.GetFileName(entry.Directory), Manifest: LoadManifest(entry.Manifest)))
+    .OrderBy(entry => entry.Manifest.CaseId)
     .ToArray();
+
+// case_id must match its directory name, mirroring the identity check in
+// validate_v1.py. That check is what makes case ids unique here: directory names
+// already are, so tying the id to the directory rules out two cases declaring the
+// same id. Without it the SetEquals below would accept a duplicate -- every
+// expected id present, one of them twice -- and the oracle would then generate
+// that case twice and overwrite its own output.
+foreach (var (name, manifest) in manifestsByDirectory)
+{
+    if (!string.Equals(manifest.CaseId, name, StringComparison.Ordinal))
+    {
+        throw new InvalidOperationException(
+            $"Case identity mismatch: directory '{name}' declares case_id '{manifest.CaseId}'.");
+    }
+}
+
+var manifests = manifestsByDirectory.Select(entry => entry.Manifest).ToArray();
 
 // The exact case set the v1 contract covers. Named rather than counted: a bare
 // count says nothing about which case went missing, and has to be edited on every

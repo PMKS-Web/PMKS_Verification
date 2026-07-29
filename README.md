@@ -231,12 +231,31 @@ Two things that mislead while debugging a run:
 The oracle half runs locally, which removes most blind CI iteration:
 
 ```bash
-git clone https://github.com/DesignEngrLab/PMKS .external/PMKS
-git -C .external/PMKS checkout 2a0a6fca957dd19844567702af663f607dc15dfe
+# The pinned PMKS-Web fork, not DesignEngrLab upstream. The oracle and every
+# recorded pmks_source_content_sha256 are the fork at this commit; building
+# against unpatched upstream silently produces numbers CI will not reproduce.
+git clone https://github.com/PMKS-Web/PMKS .external/PMKS
+git -C .external/PMKS checkout 644b26c75b07182ce04dc6466cfec74ee4130c93
+
+# Prints PMKS_ORACLE=PASS on success. That line is the local gate: the oracle
+# runs its own positive/negative sweep per case and fails if either direction
+# disagrees.
 dotnet run --project oracle/pmks/PmksOracle.csproj -c Release -- \
   --cases-root reference-data/v1/cases --output-root artifacts/candidate/reference-data/v1
+
+# Checks the COMMITTED contract. --root defaults to reference-data/v1, so this
+# does not look at the candidate just generated and a broken candidate cannot
+# make it fail. Run it for what it does catch: schema, case-set membership,
+# trust labels, and stale content hashes after editing shared sources.
 python3 tools/validate_v1.py --require-sources
 ```
+
+**Nothing local compares the candidate against the committed tables.** `compare_baseline.py`
+requires a *combined* MATLAB + PMKS candidate — it asserts the whole baseline file set is present,
+so an oracle-only candidate fails immediately on every missing `matlab/` path rather than on any
+numeric difference. Building that combined tree needs the MATLAB job, so the numeric
+MATLAB-versus-PMKS comparison is genuinely CI-only. Locally, `PMKS_ORACLE=PASS` plus a clean
+`validate_v1.py` is as far as you can get.
 
 Only MATLAB genuinely requires the runner.
 
