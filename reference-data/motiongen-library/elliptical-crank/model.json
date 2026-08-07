@@ -1,0 +1,42 @@
+{
+  "source": "MotionGen library, \"Elliptical Crank\"",
+  "captured_from": "https://motiongen.io/core",
+  "capture_method": "in-page model state; see ../README.md",
+  "units": { "length": "in", "angle": "deg" },
+  "joints": [
+    { "id": "J1", "x": 0, "y": 0 },
+    { "id": "J2", "x": -0.517497, "y": 0.696942 },
+    { "id": "J3", "x": -2.87544, "y": 0.032816 },
+    { "id": "J4", "x": -3.960199, "y": 0.472074 },
+    { "id": "J5", "x": -3.340474, "y": 1.397268 },
+    { "id": "J6", "x": 2.337757, "y": 0.056553 },
+    { "id": "J7", "x": 4.561923, "y": 0.050399 },
+    { "id": "J8", "x": 1.432252, "y": 0.05919 },
+    { "id": "J9", "x": 3, "y": 0 }
+  ],
+  "links": [
+    { "joints": ["J1", "J2"] },
+    { "joints": ["J3", "J4"], "note": "the driven crank" },
+    { "joints": ["J4", "J5"] },
+    { "joints": ["J5", "J2", "J6"], "note": "coupler; J6 rides the grounded slot" },
+    { "joints": ["J7", "J8"], "slots": ["slot1"] },
+    { "joints": ["J1", "J9", "J7", "J8", "J3"], "isGround": true }
+  ],
+  "slots": [{ "id": "slot1", "ends": ["J7", "J8"], "riders": ["J6"] }],
+  "cylinders": [],
+  "actuators": [
+    {
+      "type": "rotary",
+      "at": "J3",
+      "from": "J8",
+      "to": "J4",
+      "min": 0,
+      "max": 360,
+      "velocity": 10
+    }
+  ],
+  "notes": [
+    "The slot bar J7-J8 is grounded, so the slot is a fixed guide lying almost along +x: atan2(0.050399 - 0.05919, 4.561923 - 1.432252) = -0.002809 rad.",
+    "The rotary actuator names THREE ordered joints -- at, from, to -- which is the ordered actuator record PMKS+'s plan (docs/joint-types-plan.md 2.9) had only second-hand. `from` is a ground joint here, so the crank's angle is measured from the world."
+  ]
+}

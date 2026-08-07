@@ -1,0 +1,48 @@
+{
+  "source": "MotionGen library, \"Gripper\"",
+  "captured_from": "https://motiongen.io/core",
+  "capture_method": "in-page model state; see ../README.md",
+  "units": { "length": "in", "angle": "deg" },
+  "joints": [
+    { "id": "J1", "x": -1.924786, "y": -0.00057 },
+    { "id": "J2", "x": -1.133345, "y": 1.004752 },
+    { "id": "J3", "x": -1.133345, "y": -0.995248 },
+    { "id": "J4", "x": 0.866655, "y": 1.004752 },
+    { "id": "J5", "x": 0.866655, "y": -0.995248 },
+    { "id": "J6", "x": -1.989728, "y": 2.121085 },
+    { "id": "J7", "x": 0.010272, "y": 2.121085 },
+    { "id": "J8", "x": -1.98973, "y": -2.11158 },
+    { "id": "J9", "x": 0.01027, "y": -2.11158 },
+    { "id": "J10", "x": 4.007358, "y": -0.753037 },
+    { "id": "J11", "x": 4.017962, "y": 1.051501 },
+    { "id": "J12", "x": -1.989744, "y": 3.979487 },
+    { "id": "J13", "x": -1.989744, "y": -4.020513 },
+    { "id": "J14", "x": 0.010256, "y": -4.020513 },
+    { "id": "J15", "x": 0.010256, "y": 3.979487 },
+    { "id": "J16", "x": -4.86561, "y": -0.000826, "isWelded": true }
+  ],
+  "links": [
+    { "joints": ["J1", "J2", "J3", "J4", "J5"], "note": "the plate the cylinder pushes" },
+    { "joints": ["J2", "J6"] },
+    { "joints": ["J4", "J7"] },
+    { "joints": ["J3", "J8"] },
+    { "joints": ["J5", "J9"] },
+    { "joints": ["J8", "J9", "J10"], "note": "lower jaw" },
+    { "joints": ["J6", "J7", "J11"], "note": "upper jaw" },
+    { "joints": ["J12", "J13", "J14", "J15", "J16"], "isGround": true },
+    { "joints": ["J12", "J13"], "slots": ["slot1"] },
+    { "joints": ["J15", "J14"], "slots": ["slot2"] }
+  ],
+  "slots": [
+    { "id": "slot1", "ends": ["J12", "J13"], "riders": ["J8", "J6"] },
+    { "id": "slot2", "ends": ["J15", "J14"], "riders": ["J9", "J7"] }
+  ],
+  "cylinders": [{ "joints": ["J16", "J1"], "stroke": 1.5529590011267698 }],
+  "actuators": [
+    { "type": "linear", "at": "J1", "from": "J16", "to": null, "velocity": 1 }
+  ],
+  "notes": [
+    "Both slot bars are grounded: J12/J13 and J14/J15 are members of the ground link as well as of the bar that carries the slot. Each slot is therefore a fixed vertical guide, and each carries TWO riders.",
+    "The actuator is linear and names two joints (at, from) rather than the three a rotary one names, because a sliding freedom needs no reference direction."
+  ]
+}
